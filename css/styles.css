@@ -476,9 +476,36 @@ html, body {
   background: var(--critical-crimson);
 }
 
-/* Primary Master Button */
+/* Primary Master Button + 1-Tap Call My Lawyer */
 .shield-action-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   margin-bottom: 16px;
+}
+
+.btn-call-lawyer {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(229, 184, 105, 0.32);
+  background: rgba(229, 184, 105, 0.08);
+  color: var(--champagne-gold);
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s var(--ease-out-expo);
+}
+
+.btn-call-lawyer:hover {
+  background: rgba(229, 184, 105, 0.16);
+  border-color: rgba(229, 184, 105, 0.55);
+  transform: translateY(-1px);
 }
 
 .btn-shield-master {

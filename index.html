@@ -106,7 +106,7 @@
               </div>
             </div>
 
-            <!-- Master Shield Start / Stop Button -->
+            <!-- Master Shield Start / Stop + 1-Tap Call My Lawyer -->
             <div class="shield-action-container">
               <button type="button" class="btn-shield-master" id="btn-shield-master">
                 <svg class="shield-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -116,6 +116,12 @@
                 </svg>
                 <span id="btn-shield-master-text">Activate Pocket Counsel</span>
               </button>
+              <a href="tel:0206639121" class="btn-call-lawyer" id="btn-call-lawyer" title="1-Tap Direct Dial to Your Saved Lawyer or Ghana Legal Aid / PPSB">
+                <svg class="mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+                <span id="btn-call-lawyer-text">Call My Lawyer / Legal Aid</span>
+              </a>
             </div>
 
             <!-- Segmented Recording Mode Selector (Zero Emojis) -->
@@ -726,6 +732,29 @@
                   Activate Cloud Vault (MoMo / Card)
                 </button>
               </div>
+
+              <!-- Supabase Cloud Backend & Cryptographic Notary Card -->
+              <div class="settings-card" id="supabase-config-card">
+                <div class="deck-header">
+                  <span class="settings-title">Supabase Cloud Backend</span>
+                  <span class="deck-mode-tag" id="supabase-status-badge">Local Queue Active</span>
+                </div>
+                <p class="settings-desc" style="margin-bottom: 12px;">
+                  Sync SHA-256 session hashes, live SOS GPS telemetry, and encrypted media blobs to your Supabase PostgreSQL &amp; Storage (`evidence-vault`).
+                </p>
+                <form id="form-supabase-config" class="contacts-form">
+                  <div class="contact-entry-group">
+                    <label class="contact-label">Supabase Project URL &amp; Anon Public Key</label>
+                    <div class="contact-inputs-row">
+                      <input type="url" id="supabase-url-input" class="contact-input" placeholder="https://xyzcompany.supabase.co">
+                      <input type="password" id="supabase-key-input" class="contact-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6...">
+                    </div>
+                  </div>
+                  <div class="contacts-actions-row">
+                    <button type="submit" class="btn-secondary-action">Connect Supabase Cloud</button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
 
@@ -918,6 +947,7 @@
   <script src="js/engine/media-recorder.js"></script>
   <script src="js/engine/stealth-mode.js"></script>
   <script src="js/engine/sos-dispatcher.js"></script>
+  <script src="js/engine/supabase-sync.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

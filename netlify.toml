@@ -1,0 +1,26 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/api/tts"
+  to = "/.netlify/functions/neural-tts"
+  status = 200
+
+[[redirects]]
+  from = "/api/analyze-encounter"
+  to = "/.netlify/functions/analyze-encounter"
+  status = 200
+
+[[redirects]]
+  from = "/api/dispatch-sos"
+  to = "/.netlify/functions/dispatch-sos"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(self), microphone=(self), geolocation=(self)"

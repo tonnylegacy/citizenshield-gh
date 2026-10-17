@@ -304,10 +304,13 @@
   };
 
   // ========================================================================
-  // 3. TOAST NOTIFICATION UTILITY
+  // 3. TOAST NOTIFICATION UTILITY (Single Dynamic-Island Style Pill)
   // ========================================================================
-  function showToast(message, type = 'safe', duration = 3200) {
+  function showToast(message, type = 'safe', duration = 2200) {
     if (!DOM.toastContainer) return;
+
+    // Keep at most 1 toast visible so rapid events never stack on mobile screens
+    DOM.toastContainer.innerHTML = '';
 
     const toast = document.createElement('div');
     toast.className = `tactical-toast toast-${type}`;
@@ -332,7 +335,7 @@
     setTimeout(() => {
       if (toast.parentElement) {
         toast.style.opacity = '0';
-        toast.style.transform = 'translateY(8px)';
+        toast.style.transform = 'translateY(-6px)';
         toast.style.transition = 'all 0.2s ease';
         setTimeout(() => toast.remove(), 200);
       }
@@ -1304,6 +1307,23 @@
         DOM.contactsStatusBadge.textContent = 'CONFIGURED (ACTIVE)';
         DOM.contactsStatusBadge.style.color = '#4ADE80';
       }
+      updateCallLawyerButton(contacts.lawyer);
+    }
+  }
+
+  function updateCallLawyerButton(lawyerObj) {
+    const callBtn = document.getElementById('btn-call-lawyer');
+    const callText = document.getElementById('btn-call-lawyer-text');
+    if (!callBtn || !callText) return;
+
+    if (lawyerObj && lawyerObj.phone && lawyerObj.phone.trim()) {
+      const cleanPhone = lawyerObj.phone.replace(/\s+/g, '');
+      const name = lawyerObj.name && lawyerObj.name.trim() ? lawyerObj.name.trim() : 'My Lawyer';
+      callBtn.href = `tel:${cleanPhone}`;
+      callText.textContent = `Call ${name}`;
+    } else {
+      callBtn.href = 'tel:0206639121';
+      callText.textContent = 'Call My Lawyer / Legal Aid';
     }
   }
 
@@ -1342,6 +1362,7 @@
       DOM.contactsStatusBadge.style.color = '#4ADE80';
     }
 
+    updateCallLawyerButton(payload.lawyer);
     showToast('Emergency Contacts & Lawyer Saved', 'safe');
   }
 
@@ -1363,6 +1384,60 @@
 
     DOM.btnOpenProModal?.addEventListener('click', openProModal);
     loadContactsIntoForm();
+
+    // Wire Supabase Cloud Backend Card & Automatic Event Hooks
+    const supaForm = document.getElementById('form-supabase-config');
+    const supaUrlInput = document.getElementById('supabase-url-input');
+    const supaKeyInput = document.getElementById('supabase-key-input');
+    const supaBadge = document.getElementById('supabase-status-badge');
+
+    function refreshSupabaseBadge() {
+      if (!window.SupabaseSync || !supaBadge) return;
+      const st = window.SupabaseSync.getStatus();
+      if (st.configured) {
+        supaBadge.textContent = st.queuedCount > 0 ? `Cloud Active (${st.queuedCount} Queued)` : 'Supabase Connected';
+        supaBadge.style.color = '#34D399';
+      } else {
+        supaBadge.textContent = st.queuedCount > 0 ? `Offline Queue (${st.queuedCount} Sealed)` : 'Local Queue Active';
+        supaBadge.style.color = '#E5B869';
+      }
+    }
+
+    if (window.SupabaseSync) {
+      const cfg = window.SupabaseSync.loadConfig();
+      if (supaUrlInput && cfg.url) supaUrlInput.value = cfg.url;
+      if (supaKeyInput && cfg.anonKey) supaKeyInput.value = cfg.anonKey;
+      refreshSupabaseBadge();
+
+      window.SupabaseSync.on('statusChange', refreshSupabaseBadge);
+      window.SupabaseSync.on('synced', refreshSupabaseBadge);
+
+      if (window.EvidenceVault) {
+        window.EvidenceVault.on('sessionEnded', (session) => {
+          window.SupabaseSync.syncEvidenceSession(session);
+        });
+      }
+      if (window.LegalCopilotEngine) {
+        window.LegalCopilotEngine.on('watermark', (wm) => {
+          const gps = window.EvidenceVault ? window.EvidenceVault.getCurrentGps() : null;
+          window.SupabaseSync.syncWatermark('LIVE-SHIELD', wm, gps);
+        });
+      }
+      if (window.SOSDispatcher) {
+        window.SOSDispatcher.on('sosDispatched', (packet) => {
+          window.SupabaseSync.syncSosDispatch(packet);
+        });
+      }
+    }
+
+    supaForm?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (window.SupabaseSync) {
+        window.SupabaseSync.saveConfig(supaUrlInput?.value || '', supaKeyInput?.value || '');
+        refreshSupabaseBadge();
+        showToast('Supabase Cloud Notary Configured & Syncing', 'safe');
+      }
+    });
   }
 
   // ========================================================================
