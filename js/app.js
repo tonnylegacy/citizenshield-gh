@@ -279,6 +279,30 @@
     toastContainer: document.getElementById('toast-container')
   };
 
+  // 3D Orb reactive state
+  const OrbState = {
+    armed: false,
+    threatState: 'SAFE',
+    voicePulse: 0,
+    rotX: 0.25,
+    rotY: 0.4,
+    velX: 0.0015,
+    velY: 0.0045,
+    isDragging: false,
+    dragMoved: false,
+    lastX: 0,
+    lastY: 0
+  };
+
+  // Crisp inline SVG helper icons
+  const SVG_ICONS = {
+    shield: '<svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>',
+    warning: '<svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+    critical: '<svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+    badge: '<svg class="mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><circle cx="12" cy="10" r="3"/></svg>',
+    audio: '<svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>'
+  };
+
   // ========================================================================
   // 3. TOAST NOTIFICATION UTILITY
   // ========================================================================
@@ -288,13 +312,13 @@
     const toast = document.createElement('div');
     toast.className = `tactical-toast toast-${type}`;
     
-    let icon = '🛡️';
-    if (type === 'warning') icon = '⚠️';
-    if (type === 'critical') icon = '🚨';
+    let iconSvg = SVG_ICONS.shield;
+    if (type === 'warning') iconSvg = SVG_ICONS.warning;
+    if (type === 'critical') iconSvg = SVG_ICONS.critical;
 
     toast.innerHTML = `
-      <div style="display:flex; align-items:center; gap:8px;">
-        <span>${icon}</span>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="color:var(--champagne-gold); display:flex;">${iconSvg}</span>
         <span>${message}</span>
       </div>
       <button style="background:none; border:none; color:var(--text-tertiary); cursor:pointer; font-size:12px;">✕</button>
@@ -379,9 +403,9 @@
       label.classList.toggle('selected', radio && radio.checked);
     });
 
-    let displayStr = 'AUDIO STEALTH';
-    if (rawValue === 'secret-video') displayStr = 'SECRET VIDEO (TORCH OFF)';
-    if (rawValue === 'open-video') displayStr = 'OPEN VIEWFINDER';
+    let displayStr = 'Stealth Audio';
+    if (rawValue === 'secret-video') displayStr = 'Discrete Video (No Flash)';
+    if (rawValue === 'open-video') displayStr = 'Open Viewfinder';
     
     if (DOM.shieldModeLabel) {
       DOM.shieldModeLabel.textContent = displayStr;
@@ -401,16 +425,20 @@
     const mode = getSelectedRecordingMode();
     AppState.shieldActive = true;
     AppState.sessionSeconds = 0;
+    OrbState.armed = true;
+    OrbState.voicePulse = 0.85;
 
     // Update UI Deck state
     DOM.shieldDeckContainer?.classList.add('shield-active');
     DOM.btnShieldMaster?.classList.add('recording');
     if (DOM.btnShieldMasterText) {
-      DOM.btnShieldMasterText.textContent = 'SHIELD ACTIVE • TAP TO SECURE';
+      DOM.btnShieldMasterText.textContent = 'Shield Active • Tap to Seal Vault';
     }
     if (DOM.shieldStatusText) {
-      DOM.shieldStatusText.textContent = 'SHIELD ACTIVE • ENCRYPTING EVIDENCE';
+      DOM.shieldStatusText.textContent = 'Listening & Encrypting Evidence';
     }
+    const hintEl = document.querySelector('.orb-tap-hint');
+    if (hintEl) hintEl.textContent = '3D Acoustic Guard Active';
 
     // Start timer
     clearInterval(AppState.sessionTimerId);
@@ -434,38 +462,40 @@
       await window.EvidenceVault.startSession(mode);
     }
 
-    appendTranscriptLine('System', `CitizenShield Armed [Mode: ${mode.toUpperCase()}]. Encrypted hash chain initiated.`, 'speaker-system');
-    showToast('CitizenShield Armed • 5s Continuous Cryptographic Recording', 'safe');
+    appendTranscriptLine('System', `Pocket Counsel armed (${mode}). Continuous SHA-256 chain initiated.`, 'speaker-system');
+    showToast('Pocket Counsel Armed • Continuous 5s Cryptographic Recording', 'safe');
   }
 
   async function deactivateShield() {
     AppState.shieldActive = false;
+    OrbState.armed = false;
 
     // Reset UI Deck state
     DOM.shieldDeckContainer?.classList.remove('shield-active');
     DOM.btnShieldMaster?.classList.remove('recording');
     if (DOM.btnShieldMasterText) {
-      DOM.btnShieldMasterText.textContent = 'ACTIVATE LIVE SHIELD';
+      DOM.btnShieldMasterText.textContent = 'Activate Pocket Counsel';
     }
     if (DOM.shieldStatusText) {
-      DOM.shieldStatusText.textContent = 'SHIELD IDLE • STANDBY';
+      DOM.shieldStatusText.textContent = 'Standby • Ready to Protect';
     }
+    const hintEl = document.querySelector('.orb-tap-hint');
+    if (hintEl) hintEl.textContent = 'Tap Sphere to Arm';
 
     clearInterval(AppState.sessionTimerId);
 
     // Stop Media Engine & Finalize Vault
-    let closedSession = null;
     if (window.MediaEngine) {
-      closedSession = await window.MediaEngine.stopShield();
+      await window.MediaEngine.stopShield();
     } else if (window.EvidenceVault) {
-      closedSession = await window.EvidenceVault.endSession();
+      await window.EvidenceVault.endSession();
     }
 
     // Reset Threat Meter
     updateThreatUI(0, 'SAFE');
 
-    appendTranscriptLine('System', 'Shield session ended. Evidence safely sealed in encrypted vault.', 'speaker-system');
-    showToast('Shield Terminated • Forensic Evidence Dossier Ready in Vault', 'safe');
+    appendTranscriptLine('System', 'Encounter ended. Dossier sealed in local cryptographic vault.', 'speaker-system');
+    showToast('Session Sealed • Court Dossier Ready in Evidence Vault', 'safe');
 
     // Auto-refresh vault stats if on vault tab
     if (AppState.activeTab === 'view-vault') {
@@ -495,7 +525,7 @@
       if (window.MediaEngine) {
         window.MediaEngine.setEarbudMode(isEnabled);
       }
-      showToast(`Earbud Whisper Guidance: ${isEnabled ? 'ENABLED' : 'MUTED'}`, 'safe');
+      showToast(`Earbud Whisper Coaching: ${isEnabled ? 'Active' : 'Muted'}`, 'safe');
     });
 
     // Stealth Blackout switch
@@ -537,9 +567,11 @@
   function updateThreatUI(score, state) {
     const s = Math.max(0, Math.min(100, score || 0));
     const st = state || 'SAFE';
+    OrbState.threatState = st;
+    OrbState.voicePulse = Math.max(OrbState.voicePulse, s / 100);
 
     if (DOM.threatMeterFill) {
-      DOM.threatMeterFill.style.width = `${Math.max(6, s)}%`;
+      DOM.threatMeterFill.style.width = `${Math.max(8, s)}%`;
       DOM.threatMeterFill.classList.toggle('elevated', st === 'ELEVATED');
       DOM.threatMeterFill.classList.toggle('critical', st === 'CRITICAL');
     }
@@ -549,9 +581,9 @@
     }
 
     if (DOM.threatBadgeText) {
-      let label = `SAFE (${s}%)`;
-      if (st === 'ELEVATED') label = `ELEVATED WARNING (${s}%)`;
-      if (st === 'CRITICAL') label = `CRITICAL THREAT (${s}%)`;
+      let label = s > 0 ? `Calm (${s}%)` : 'Calm Encounter';
+      if (st === 'ELEVATED') label = `Elevated Caution (${s}%)`;
+      if (st === 'CRITICAL') label = `Critical Threat (${s}%)`;
       DOM.threatBadgeText.textContent = label;
     }
 
@@ -618,14 +650,14 @@
 
     if (AppState.pinnedBadges.length === 0) {
       DOM.pinnedChipsContainer.innerHTML = `
-        <span class="brand-subtitle" style="color:var(--text-tertiary);" id="empty-chips-msg">No badge pinned yet. Speak badge aloud or type below.</span>
+        <span class="empty-chips-placeholder" id="empty-chips-msg">No officer badges logged in this session yet.</span>
       `;
-      if (DOM.pinnedCountLabel) DOM.pinnedCountLabel.textContent = '0 PINNED';
+      if (DOM.pinnedCountLabel) DOM.pinnedCountLabel.textContent = '0 Logged';
       return;
     }
 
     if (DOM.pinnedCountLabel) {
-      DOM.pinnedCountLabel.textContent = `${AppState.pinnedBadges.length} PINNED`;
+      DOM.pinnedCountLabel.textContent = `${AppState.pinnedBadges.length} Logged`;
     }
 
     DOM.pinnedChipsContainer.innerHTML = '';
@@ -633,7 +665,7 @@
       const chip = document.createElement('div');
       chip.className = 'officer-chip';
       chip.innerHTML = `
-        <span>👮</span>
+        ${SVG_ICONS.badge}
         <span>${escapeHtml(badge)}</span>
         <button type="button" class="chip-remove" data-index="${index}" title="Remove badge evidence">✕</button>
       `;
@@ -670,7 +702,7 @@
       });
     }
 
-    showToast(`Officer Evidence Pinned: ${clean}`, 'safe');
+    showToast(`Officer Evidence Stamped: ${clean}`, 'safe');
   }
 
   function removeOfficerBadgeChip(index) {
@@ -701,7 +733,7 @@
 
     if (typeof prompt === 'string') {
       if (DOM.legalCardScript) {
-        DOM.legalCardScript.textContent = `"${prompt}"`;
+        DOM.legalCardScript.textContent = `“${prompt}”`;
       }
       return;
     }
@@ -716,9 +748,9 @@
       DOM.legalCardRight.textContent = prompt.summary;
     }
     if (prompt.sayThis && DOM.legalCardScript) {
-      DOM.legalCardScript.textContent = `"${prompt.sayThis}"`;
+      DOM.legalCardScript.textContent = `“${prompt.sayThis}”`;
     } else if (prompt.actionPrompt && DOM.legalCardScript) {
-      DOM.legalCardScript.textContent = `"${prompt.actionPrompt}"`;
+      DOM.legalCardScript.textContent = `“${prompt.actionPrompt}”`;
     }
     if (prompt.boundary && DOM.legalCardBoundary) {
       DOM.legalCardBoundary.textContent = prompt.boundary;
@@ -727,8 +759,9 @@
 
   function initLegalCardWhisper() {
     DOM.btnWhisperActiveScript?.addEventListener('click', () => {
-      const scriptText = DOM.legalCardScript?.textContent?.replace(/^"|"$/g, '') || '';
+      const scriptText = DOM.legalCardScript?.textContent?.replace(/^[“"]|[”"]$/g, '') || '';
       if (scriptText) {
+        OrbState.voicePulse = 0.9;
         if (window.MediaEngine) {
           window.MediaEngine.whisper(scriptText, true);
         } else if ('speechSynthesis' in window) {
@@ -736,7 +769,7 @@
           u.rate = 1.0;
           window.speechSynthesis.speak(u);
         }
-        showToast('🎧 Whispering calm verbal script into earbud...', 'safe');
+        showToast('Whispering calm legal script into earbud...', 'safe');
       }
     });
   }
@@ -753,7 +786,7 @@
     const now = new Date();
     const timeStr = now.toTimeString().substring(0, 8);
 
-    line.innerHTML = `<span class="transcript-timestamp">[${timeStr}] [${speaker.toUpperCase()}]</span> ${escapeHtml(text)}`;
+    line.innerHTML = `<span class="transcript-timestamp">${timeStr} • ${speaker}</span> ${escapeHtml(text)}`;
     DOM.transcriptFeed.appendChild(line);
 
     // Auto-scroll
@@ -763,6 +796,7 @@
   function handleSimulatedTranscript(text, speaker = 'Officer') {
     if (!text) return;
     const clean = text.trim();
+    OrbState.voicePulse = 1.0;
 
     // 1. Render in UI feed
     const speakerClass = speaker.toLowerCase() === 'officer' 
@@ -900,9 +934,9 @@
     if (filtered.length === 0) {
       DOM.statutoryCardsContainer.innerHTML = `
         <div class="vault-empty-state">
-          <span style="font-size:24px;">⚖️</span>
-          <p>No legal protections match "${escapeHtml(AppState.lawsSearchQuery)}".</p>
-          <span style="font-size:11px;">Try searching for "phone", "license", "cash", "arrest", or "search".</span>
+          <div class="empty-vault-icon">${SVG_ICONS.shield}</div>
+          <p>No statutory protections match "${escapeHtml(AppState.lawsSearchQuery)}".</p>
+          <span>Try searching for "phone", "license", "cash", "arrest", or "search".</span>
         </div>
       `;
       return;
@@ -924,38 +958,40 @@
       card.innerHTML = `
         <div class="statute-summary">
           <div class="statute-titles">
-            <span class="statute-ref">${escapeHtml(law.statute || '1992 CONSTITUTION')}</span>
+            <span class="statute-ref">${escapeHtml(law.statute || '1992 Constitution')}</span>
             <span class="statute-heading">${escapeHtml(law.title)}</span>
           </div>
-          <span class="statute-chevron">▼</span>
+          <span class="statute-chevron">▾</span>
         </div>
 
         <div class="statute-details">
-          ${law.caseLaw ? `<p style="font-size:11px; color:var(--civic-gold); font-weight:600;">⚖️ Binding Precedent: ${escapeHtml(law.caseLaw)}</p>` : ''}
+          ${law.caseLaw ? `<p style="font-size:12px; color:var(--champagne-gold); font-weight:600; margin-bottom:8px;">Precedent: ${escapeHtml(law.caseLaw)}</p>` : ''}
           <p>${escapeHtml(law.summary)}</p>
 
           <div class="statute-key-rule">
-            <strong>CITIZEN RIGHTS SAFEGUARDS:</strong>
-            <ul style="margin-left:16px; margin-top:4px;">
+            <strong>Protected Citizen Rights</strong>
+            <ul style="margin-left:18px; margin-top:6px;">
               ${citizenRightsList}
             </ul>
           </div>
 
-          <div style="background:rgba(220,38,38,0.08); border-left:3px solid var(--critical-crimson); padding:6px 10px; margin:8px 0; color:#FCA5A5;">
-            <strong>OFFICER STATUTORY BOUNDARY:</strong>
-            <ul style="margin-left:16px; margin-top:4px;">
+          <div style="background:rgba(239,68,68,0.08); border-left:3px solid var(--critical-crimson); padding:10px 14px; border-radius:0 8px 8px 0; margin:10px 0; color:#FCA5A5;">
+            <strong>Officer Statutory Limit</strong>
+            <ul style="margin-left:18px; margin-top:6px;">
               ${officerLimitsList}
             </ul>
           </div>
 
           ${law.sayThis ? `
-            <div class="calm-quote-box" style="margin-top:8px;">
-              <div class="calm-quote-text">"${escapeHtml(law.sayThis)}"</div>
-              <div class="calm-quote-actions">
+            <div class="calm-quote-box" style="margin-top:14px; margin-bottom:0;">
+              <div class="quote-pass-header">
+                <span class="quote-eyebrow">What to Say Calmly</span>
                 <button type="button" class="btn-whisper-speech btn-whisper-law-card">
-                  <span>🎧</span> <span>Whisper Script</span>
+                  ${SVG_ICONS.audio}
+                  <span>Whisper to Earbud</span>
                 </button>
               </div>
+              <div class="calm-quote-text" style="font-size:20px;">“${escapeHtml(law.sayThis)}”</div>
             </div>
           ` : ''}
         </div>
@@ -972,13 +1008,14 @@
       if (whisperBtn && law.sayThis) {
         whisperBtn.addEventListener('click', (e) => {
           e.stopPropagation();
+          OrbState.voicePulse = 0.85;
           if (window.MediaEngine) {
             window.MediaEngine.whisper(law.sayThis, true);
           } else if ('speechSynthesis' in window) {
             const u = new SpeechSynthesisUtterance(law.sayThis);
             window.speechSynthesis.speak(u);
           }
-          showToast(`🎧 Whispering: "${law.title}"`, 'safe');
+          showToast(`Whispering: "${law.title}"`, 'safe');
         });
       }
 
@@ -1072,47 +1109,47 @@
 
       const gps = session.finalGps || session.initialGps || { latitude: 5.6037, longitude: -0.1870, locationName: 'Accra, GH' };
       const shortHash = session.cumulativeChainHash 
-        ? `${session.cumulativeChainHash.substring(0, 16)}...` 
-        : 'SHA-256 SEALED';
+        ? `${session.cumulativeChainHash.substring(0, 20)}...` 
+        : 'SHA-256 Sealed';
 
       const badgesText = (session.watermarks && session.watermarks.length > 0)
-        ? session.watermarks.map(w => `👮 ${w.identifier || w.rawText}`).join('  ')
-        : 'None recorded';
+        ? session.watermarks.map(w => w.identifier || w.rawText).join(' • ')
+        : 'None logged';
 
       card.innerHTML = `
         <div class="session-header">
-          <span class="session-timestamp">📁 ${session.id} • ${startDate}</span>
-          <span class="threat-badge ${threatPillClass}">PEAK: ${peakThreat}%</span>
+          <span class="session-timestamp">${session.id} • ${startDate}</span>
+          <span class="threat-badge ${threatPillClass}">Peak Intensity: ${peakThreat}%</span>
         </div>
 
         <div class="session-body">
           <div class="session-telemetry-row">
-            <span>⏱️ <strong>${m}:${s}</strong></span>
-            <span>📹 <strong>${(session.mode || 'audio').toUpperCase()}</strong></span>
-            <span>📍 <strong>${gps.latitude?.toFixed(4) || '5.6037'}° N, ${Math.abs(gps.longitude || 0.187).toFixed(4)}° W</strong></span>
+            <span>Duration: <strong>${m}:${s}</strong></span>
+            <span>Mode: <strong>${(session.mode || 'audio').toUpperCase()}</strong></span>
+            <span>GPS: <strong>${gps.latitude?.toFixed(4) || '5.6037'}° N, ${Math.abs(gps.longitude || 0.187).toFixed(4)}° W</strong></span>
           </div>
 
-          <div style="font-size:11px; color:var(--text-secondary);">
-            <strong>Officer Evidence:</strong> ${escapeHtml(badgesText)}
+          <div style="font-size:12.5px; color:var(--text-secondary);">
+            <strong>Officer Watermarks:</strong> ${escapeHtml(badgesText)}
           </div>
 
           <div class="session-hash-bar" title="Cryptographic SHA-256 Chain Hash">
-            🔗 HASH CHAIN: ${shortHash}
+            SHA-256 Chain: ${shortHash}
           </div>
         </div>
 
         <div class="session-actions-bar">
           <button type="button" class="btn-vault-action btn-dossier" data-action="dossier" data-id="${session.id}">
-            📄 Export Court Dossier
+            Export Court Dossier
           </button>
           <a href="#" class="btn-vault-action btn-whatsapp" data-action="ppsb" data-id="${session.id}" target="_blank">
-            🟢 Send PPSB WhatsApp
+            Report to PPSB WhatsApp ↗
           </a>
           <button type="button" class="btn-vault-action btn-cloud" data-action="cloud">
-            ☁️ Cloud Backup (Pro)
+            Cloud Vault Backup
           </button>
           <button type="button" class="btn-vault-action btn-delete" data-action="delete" data-id="${session.id}">
-            🗑️ Delete
+            Delete
           </button>
         </div>
       `;
@@ -1444,7 +1481,219 @@
   }
 
   // ========================================================================
-  // 15. HELPER UTILITIES
+  // 15. 3D INTERACTIVE ACOUSTIC SHIELD SPHERE & PERSPECTIVE TILT PHYSICS
+  // ========================================================================
+  function init3DShieldOrb() {
+    const canvas = document.getElementById('shield-3d-canvas');
+    const stage = document.getElementById('orb-stage-trigger');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const size = 240;
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    ctx.scale(dpr, dpr);
+
+    // Generate 320 Fibonacci sphere vertices + 60 orbital ring vertices
+    const N = 320;
+    const points = [];
+    const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+
+    for (let i = 0; i < N; i++) {
+      const y = 1 - (i / (N - 1)) * 2;
+      const radiusAtY = Math.sqrt(1 - y * y);
+      const theta = goldenAngle * i;
+      points.push({
+        x: Math.cos(theta) * radiusAtY,
+        y: y,
+        z: Math.sin(theta) * radiusAtY,
+        theta: theta,
+        phi: Math.acos(y),
+        isRing: false
+      });
+    }
+
+    // Add outer orbital ring vertices
+    const ringCount = 64;
+    for (let i = 0; i < ringCount; i++) {
+      const a = (i / ringCount) * Math.PI * 2;
+      points.push({
+        x: Math.cos(a) * 1.26,
+        y: Math.sin(a) * 0.28,
+        z: Math.sin(a) * 1.26,
+        theta: a,
+        phi: 0,
+        isRing: true
+      });
+    }
+
+    // Drag & Click interaction on the 3D Sphere
+    if (stage) {
+      const onStart = (x, y) => {
+        OrbState.isDragging = true;
+        OrbState.dragMoved = false;
+        OrbState.lastX = x;
+        OrbState.lastY = y;
+      };
+      const onMove = (x, y) => {
+        if (!OrbState.isDragging) return;
+        const dx = x - OrbState.lastX;
+        const dy = y - OrbState.lastY;
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) OrbState.dragMoved = true;
+        OrbState.velY = dx * 0.006;
+        OrbState.velX = dy * 0.006;
+        OrbState.rotY += OrbState.velY;
+        OrbState.rotX += OrbState.velX;
+        OrbState.lastX = x;
+        OrbState.lastY = y;
+      };
+      const onEnd = async () => {
+        if (!OrbState.isDragging) return;
+        OrbState.isDragging = false;
+        if (!OrbState.dragMoved) {
+          if (AppState.shieldActive) {
+            await deactivateShield();
+          } else {
+            await activateShield();
+          }
+        }
+      };
+
+      stage.addEventListener('mousedown', (e) => onStart(e.clientX, e.clientY));
+      window.addEventListener('mousemove', (e) => onMove(e.clientX, e.clientY));
+      window.addEventListener('mouseup', onEnd);
+
+      stage.addEventListener('touchstart', (e) => {
+        if (e.touches[0]) onStart(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: true });
+      stage.addEventListener('touchmove', (e) => {
+        if (e.touches[0]) onMove(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: true });
+      stage.addEventListener('touchend', onEnd);
+    }
+
+    let t = 0;
+    function renderFrame() {
+      t += 0.025;
+      ctx.clearRect(0, 0, size, size);
+
+      // Decay voice pulse smoothly
+      OrbState.voicePulse *= 0.95;
+      if (OrbState.armed && OrbState.voicePulse < 0.18) {
+        OrbState.voicePulse = 0.18 + Math.sin(t * 2.2) * 0.08;
+      }
+
+      if (!OrbState.isDragging) {
+        const baseSpin = OrbState.armed ? 0.009 : 0.0038;
+        OrbState.velY += (baseSpin - OrbState.velY) * 0.05;
+        OrbState.velX += (0.0015 - OrbState.velX) * 0.05;
+        OrbState.rotY += OrbState.velY;
+        OrbState.rotX += OrbState.velX;
+      }
+
+      // Select RGB palette by state
+      let r = 229, g = 184, b = 105; // Warm Champagne Gold standby
+      if (OrbState.threatState === 'CRITICAL') {
+        r = 239; g = 68; b = 68; // Critical Crimson
+      } else if (OrbState.threatState === 'ELEVATED') {
+        r = 245; g = 158; b = 11; // Caution Saffron
+      } else if (OrbState.armed) {
+        r = 16; g = 185; b = 129; // Sovereign Jade
+      }
+
+      const cx = size / 2;
+      const cy = size / 2;
+      const baseRadius = OrbState.armed ? 78 : 70;
+
+      // Soft core volumetric aura
+      const grad = ctx.createRadialGradient(cx, cy, 4, cx, cy, baseRadius * 1.35);
+      grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${OrbState.armed ? 0.26 : 0.14})`);
+      grad.addColorStop(0.6, `rgba(${r}, ${g}, ${b}, 0.04)`);
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, baseRadius * 1.35, 0, Math.PI * 2);
+      ctx.fill();
+
+      const cosY = Math.cos(OrbState.rotY);
+      const sinY = Math.sin(OrbState.rotY);
+      const cosX = Math.cos(OrbState.rotX);
+      const sinX = Math.sin(OrbState.rotX);
+
+      const projected = [];
+      const waveAmp = OrbState.voicePulse * 11;
+
+      for (let i = 0; i < points.length; i++) {
+        const p = points[i];
+        const harmonic = p.isRing
+          ? 1 + Math.sin(p.theta * 3 + t * 2) * (OrbState.voicePulse * 0.06)
+          : 1 + Math.sin(p.phi * 6 + t * 3.2) * Math.cos(p.theta * 4 - t * 2) * (waveAmp / baseRadius);
+
+        const px = p.x * baseRadius * harmonic;
+        const py = p.y * baseRadius * harmonic;
+        const pz = p.z * baseRadius * harmonic;
+
+        // 3D rotation Y then X
+        const x1 = px * cosY - pz * sinY;
+        const z1 = pz * cosY + px * sinY;
+        const y2 = py * cosX - z1 * sinX;
+        const z2 = z1 * cosX + py * sinX;
+
+        const fov = 260;
+        const scale = fov / (fov + z2 + baseRadius);
+        projected.push({
+          sx: cx + x1 * scale,
+          sy: cy + y2 * scale,
+          z: z2,
+          scale: scale,
+          isRing: p.isRing
+        });
+      }
+
+      // Depth-sort back to front
+      projected.sort((a, bPt) => bPt.z - a.z);
+
+      for (let i = 0; i < projected.length; i++) {
+        const pt = projected[i];
+        const depthNorm = (pt.z + baseRadius) / (2 * baseRadius); // 0 front, 1 back
+        const alpha = Math.max(0.12, Math.min(0.95, 1 - depthNorm * 0.78));
+        const dotSize = pt.isRing ? (1.3 * pt.scale) : (1.85 * pt.scale);
+
+        ctx.fillStyle = pt.isRing
+          ? `rgba(229, 184, 105, ${alpha * 0.65})`
+          : `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        ctx.beginPath();
+        ctx.arc(pt.sx, pt.sy, dotSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      requestAnimationFrame(renderFrame);
+    }
+
+    requestAnimationFrame(renderFrame);
+  }
+
+  function init3DTiltCards() {
+    const cards = document.querySelectorAll('.tilt-card');
+    cards.forEach(card => {
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const rx = ((y / rect.height) - 0.5) * -3.5;
+        const ry = ((x / rect.width) - 0.5) * 3.5;
+        card.style.transform = `perspective(1100px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = 'perspective(1100px) rotateX(0deg) rotateY(0deg)';
+      });
+    });
+  }
+
+  // ========================================================================
+  // 16. HELPER UTILITIES
   // ========================================================================
   function escapeHtml(str) {
     if (!str) return '';
@@ -1457,7 +1706,7 @@
   }
 
   // ========================================================================
-  // 16. INITIALIZATION LIFECYCLE
+  // 17. INITIALIZATION LIFECYCLE
   // ========================================================================
   function initApp() {
     initNavigation();
@@ -1473,10 +1722,12 @@
     initSosModalListeners();
     initProModal();
     initStealthOverlay();
+    init3DShieldOrb();
+    init3DTiltCards();
 
     // Verify online / offline DB indicator
     if (window.GHANA_LAWS_DATA && window.GHANA_LAWS_DATA.length > 0) {
-      if (DOM.headerDbStatus) DOM.headerDbStatus.textContent = `LEGAL DB ACTIVE (${window.GHANA_LAWS_DATA.length} STATUTES)`;
+      if (DOM.headerDbStatus) DOM.headerDbStatus.textContent = `${window.GHANA_LAWS_DATA.length} Statutes Offline`;
     }
 
     // Register Service Worker for 100% offline PWA resilience
@@ -1486,7 +1737,7 @@
       });
     }
 
-    console.log('[CitizenShield Ghana] Application Shell initialized successfully.');
+    console.log('[CitizenShield Ghana] Spatial 3D Application Shell initialized.');
   }
 
   // Launch when DOM is ready

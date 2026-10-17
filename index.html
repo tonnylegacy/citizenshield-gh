@@ -3,44 +3,66 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#090B0E">
+  <meta name="theme-color" content="#08080A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="description" content="CitizenShield Ghana: Tactical Real-time Legal Rights Copilot & Encrypted Evidence Vault">
-  <title>CitizenShield Ghana • Tactical Legal Shield</title>
+  <meta name="description" content="CitizenShield Ghana — Pocket Legal Counsel, Constitutional Compendium & Cryptographic Evidence Vault">
+  <title>CitizenShield — Pocket Legal Counsel (Ghana)</title>
   <link rel="manifest" href="manifest.json">
 
-  <!-- Google Fonts: Plus Jakarta Sans, Inter, JetBrains Mono -->
+  <!-- Editorial & Spatial Typography: Instrument Serif, Plus Jakarta Sans, Inter, JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+  <!-- Ambient Spatial Background Mesh -->
+  <div class="ambient-stage" aria-hidden="true">
+    <div class="ambient-orb ambient-orb-primary"></div>
+    <div class="ambient-orb ambient-orb-secondary"></div>
+    <div class="ambient-noise"></div>
+  </div>
+
   <div class="app-viewport">
 
     <!-- ====================================================================
-         TOP STATUS & TELEMETRY BAR
+         FLOATING TOP NAVIGATION HEADER
          ==================================================================== -->
     <header class="telemetry-header">
       <div class="brand-block">
-        <div class="brand-emblem" aria-label="Shield Logo">⚖</div>
+        <div class="brand-emblem" aria-label="CitizenShield Emblem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="M9 12l2 2 4-4"/>
+          </svg>
+        </div>
         <div class="brand-titles">
-          <div class="brand-title">CITIZEN<span>SHIELD</span> GH</div>
+          <div class="brand-title">Citizen<span>Shield</span> <sup class="gh-pill">GH</sup></div>
           <div class="brand-subtitle">
             <span class="status-dot-offline" id="header-db-indicator"></span>
-            <span id="header-db-status">LEGAL DB ACTIVE • OFFLINE-READY</span>
+            <span id="header-db-status">19 Statutes Offline</span>
           </div>
         </div>
       </div>
 
       <div class="header-actions">
-        <button type="button" class="header-btn btn-stealth" id="btn-trigger-stealth" title="Activate Stealth Blackout Screen">
-          <span>🕶️</span> <span>STEALTH</span>
+        <button type="button" class="header-btn btn-stealth" id="btn-trigger-stealth" title="Cloak Screen (OLED Lock Screen)">
+          <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+            <circle cx="12" cy="12" r="3"/>
+            <line x1="3" y1="3" x2="21" y2="21"/>
+          </svg>
+          <span>Stealth</span>
         </button>
-        <button type="button" class="header-btn btn-sos" id="btn-trigger-sos" title="Trigger Instant Emergency SOS">
-          <span>🚨</span> <span>SOS</span>
+        <button type="button" class="header-btn btn-sos" id="btn-trigger-sos" title="Trigger Emergency SOS">
+          <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <span>SOS</span>
         </button>
       </div>
     </header>
@@ -51,207 +73,320 @@
     <main class="main-content">
 
       <!-- ================================================================
-           TAB 1: LIVE SHIELD COPILOT
+           TAB 1: LIVE SHIELD COPILOT (3D SPATIAL GUARDIAN + EDITORIAL CARDS)
            ================================================================ -->
       <section id="view-shield" class="view-pane active">
         
-        <!-- Primary Shield Control Deck -->
-        <div class="shield-deck" id="shield-deck-container">
-          <div class="deck-header">
-            <div class="deck-badge">
-              <span class="shield-pulse-indicator" id="shield-status-dot"></span>
-              <span id="shield-status-text">SHIELD IDLE • STANDBY</span>
-            </div>
-            <div class="deck-badge" id="shield-mode-label">AUDIO STEALTH</div>
-          </div>
+        <div class="bento-shield-layout">
 
-          <!-- Video Viewfinder Preview (When Video Mode Selected) -->
-          <div class="video-preview-wrapper" id="video-preview-box">
-            <video id="video-element" autoplay playsinline muted></video>
-            <div class="video-live-tag">SECURE FEED</div>
-          </div>
-
-          <!-- Master Shield Start / Stop Button -->
-          <div class="shield-action-container">
-            <button type="button" class="btn-shield-master" id="btn-shield-master">
-              <svg class="shield-icon-svg" viewBox="0 0 24 24">
-                <path d="M12 2L4 5V11.09C4 16.14 7.41 20.85 12 22C16.59 20.85 20 16.14 20 11.09V5L12 2ZM12 4.15L18 6.4V11.09C18 15.04 15.45 18.72 12 19.78C8.55 18.72 6 15.04 6 11.09V6.4L12 4.15Z"/>
-              </svg>
-              <span id="btn-shield-master-text">ACTIVATE LIVE SHIELD</span>
-            </button>
-          </div>
-
-          <!-- Recording Mode Selector -->
-          <div class="mode-selector">
-            <label class="mode-radio-label selected" id="label-mode-audio">
-              <input type="radio" name="recording-mode" value="audio" checked>
-              <span class="mode-icon">🎙️</span>
-              <span>Stealth Audio<br><small>(No LED)</small></span>
-            </label>
-            <label class="mode-radio-label" id="label-mode-secret-video">
-              <input type="radio" name="recording-mode" value="secret-video">
-              <span class="mode-icon">📹</span>
-              <span>Secret Video<br><small>(Torch Locked)</small></span>
-            </label>
-            <label class="mode-radio-label" id="label-mode-open-video">
-              <input type="radio" name="recording-mode" value="open-video">
-              <span class="mode-icon">🎥</span>
-              <span>Open Video<br><small>(Consensual)</small></span>
-            </label>
-          </div>
-
-          <!-- Auxiliary Toggles: Earbud Whisper & Stealth Blackout -->
-          <div class="deck-switches">
-            <label class="switch-pill" for="toggle-earbud-whisper">
-              <div class="switch-info">
-                <span class="switch-title">Earbud Whisper</span>
-                <span class="switch-desc">TTS Legal Guidance</span>
+          <!-- LEFT / TOP HERO: 3D Acoustic Guardian Core & Recording Controls -->
+          <div class="shield-deck tilt-card" id="shield-deck-container">
+            <div class="deck-header">
+              <div class="deck-status-pill">
+                <span class="shield-pulse-indicator" id="shield-status-dot"></span>
+                <span id="shield-status-text">Standby • Ready to Protect</span>
               </div>
-              <input type="checkbox" id="toggle-earbud-whisper" class="toggle-input" checked>
-            </label>
+              <div class="deck-mode-tag" id="shield-mode-label">Stealth Audio</div>
+            </div>
 
-            <label class="switch-pill" for="toggle-stealth-blackout">
-              <div class="switch-info">
-                <span class="switch-title">Stealth Blackout</span>
-                <span class="switch-desc">Tap or Shake</span>
+            <!-- Interactive 3D Acoustic Geodesic Sphere Stage -->
+            <div class="orb-stage-container" id="orb-stage-trigger" title="Tap or drag 3D Shield Core">
+              <canvas id="shield-3d-canvas" width="320" height="320"></canvas>
+              <div class="orb-center-overlay">
+                <span class="orb-timer-readout" id="session-timer">00:00</span>
+                <span class="orb-tap-hint">Tap Sphere to Arm</span>
               </div>
-              <input type="checkbox" id="toggle-stealth-blackout" class="toggle-input" checked>
-            </label>
-          </div>
-        </div>
-
-        <!-- Live Telemetry & Threat Meter Strip -->
-        <div class="telemetry-strip">
-          <div class="telemetry-row-primary">
-            <div class="threat-badge threat-safe" id="threat-badge">
-              <span>●</span>
-              <span id="threat-badge-text">SAFE: CALM INTERACTION</span>
-            </div>
-            <div class="timer-display" id="session-timer">00:00</div>
-          </div>
-
-          <div class="meter-track" title="Real-time Legal Threat Index (0-100)">
-            <div class="meter-fill" id="threat-meter-fill"></div>
-          </div>
-
-          <div class="telemetry-row-sub">
-            <div class="gps-readout" id="gps-display" title="GPS Location Lock">
-              📍 <span id="gps-coords">5.6037° N, 0.1870° W • Accra, GH</span>
-            </div>
-            <div class="hash-readout" id="hash-display" title="Tamper-Proof SHA-256 Chain Hash">
-              🔗 <span id="chain-hash-ticker">SHA-256: 7d4a...e120</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Tactical Verbal Watermark Banner & Pinned Officer Badges -->
-        <div class="watermark-section">
-          <div class="watermark-tip-banner">
-            <div class="tip-icon">💡</div>
-            <div class="tip-text" id="watermark-tip-text">
-              <strong>Verbal Watermarking Tip:</strong> Spot the officer's badge? Say aloud: <em>"Okay Sergeant Mensah, Service Number 44821"</em> to timestamp it into court evidence.
-            </div>
-          </div>
-
-          <div class="watermark-pins-header">
-            <span class="watermark-label">PINNED OFFICER EVIDENCE CHIPS</span>
-            <span class="brand-subtitle" id="pinned-count-label">0 PINNED</span>
-          </div>
-
-          <div class="pinned-chips-container" id="pinned-chips-container">
-            <span class="brand-subtitle" style="color:var(--text-tertiary);" id="empty-chips-msg">No badge pinned yet. Speak badge aloud or type below.</span>
-          </div>
-
-          <form class="badge-quick-input" id="form-pin-badge">
-            <input type="text" id="input-pin-badge" class="badge-input-field" placeholder="E.g. Insp. Boateng #38412 or 44821" autocomplete="off">
-            <button type="submit" class="btn-pin-badge">+ Pin Badge</button>
-          </form>
-        </div>
-
-        <!-- Active Legal Counsel & De-escalation Card Stack -->
-        <div class="legal-card-stack" id="legal-card-stack">
-          <article class="legal-copilot-card status-safe" id="active-legal-card">
-            <div class="legal-card-header">
-              <span class="statute-citation-pill" id="legal-card-statute">1992 CONSTITUTION ART. 14 & 18</span>
-              <span class="legal-tag-authority" id="legal-card-authority">SUPREME COURT BINDING</span>
             </div>
 
-            <div class="legal-card-body">
-              <div class="legal-section-block">
-                <span class="legal-section-label">WHAT THE LAW SAYS</span>
-                <p class="legal-right-text" id="legal-card-right">
-                  Police officers have no statutory power to arbitrarily demand or unlock your smartphone, seize your car keys, or charge spot-fines without court process.
-                </p>
+            <!-- Video Viewfinder Preview (Only when Open Video Mode is selected) -->
+            <div class="video-preview-wrapper" id="video-preview-box">
+              <video id="video-element" autoplay playsinline muted></video>
+              <div class="video-live-tag">
+                <span class="rec-dot"></span> Consensual Viewfinder
+              </div>
+            </div>
+
+            <!-- Master Shield Start / Stop Button -->
+            <div class="shield-action-container">
+              <button type="button" class="btn-shield-master" id="btn-shield-master">
+                <svg class="shield-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                  <line x1="12" y1="19" x2="12" y2="22"/>
+                </svg>
+                <span id="btn-shield-master-text">Activate Pocket Counsel</span>
+              </button>
+            </div>
+
+            <!-- Segmented Recording Mode Selector (Zero Emojis) -->
+            <div class="mode-selector" role="radiogroup" aria-label="Capture Mode">
+              <label class="mode-radio-label selected" id="label-mode-audio">
+                <input type="radio" name="recording-mode" value="audio" checked>
+                <svg class="mode-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                </svg>
+                <span class="mode-label-title">Stealth Audio</span>
+                <small class="mode-label-sub">Zero Flash / LED</small>
+              </label>
+
+              <label class="mode-radio-label" id="label-mode-secret-video">
+                <input type="radio" name="recording-mode" value="secret-video">
+                <svg class="mode-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2m5.66 0H14a2 2 0 0 1 2 2v3.34l1 1L23 7v10"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+                <span class="mode-label-title">Discrete Video</span>
+                <small class="mode-label-sub">Torch Locked Off</small>
+              </label>
+
+              <label class="mode-radio-label" id="label-mode-open-video">
+                <input type="radio" name="recording-mode" value="open-video">
+                <svg class="mode-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m22 8-6 4 6 4V8Z"/>
+                  <rect width="14" height="12" x="2" y="6" rx="2" ry="2"/>
+                </svg>
+                <span class="mode-label-title">Open Camera</span>
+                <small class="mode-label-sub">Public Witness</small>
+              </label>
+            </div>
+
+            <!-- Tactile Switches: Earbud Whisper & Stealth Blackout -->
+            <div class="deck-switches">
+              <label class="switch-pill" for="toggle-earbud-whisper">
+                <div class="switch-icon-wrap">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/>
+                  </svg>
+                </div>
+                <div class="switch-info">
+                  <span class="switch-title">Earbud Whisper</span>
+                  <span class="switch-desc">Spoken legal coaching</span>
+                </div>
+                <input type="checkbox" id="toggle-earbud-whisper" class="toggle-input" checked>
+              </label>
+
+              <label class="switch-pill" for="toggle-stealth-blackout">
+                <div class="switch-icon-wrap">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                </div>
+                <div class="switch-info">
+                  <span class="switch-title">Fake Lock Screen</span>
+                  <span class="switch-desc">Cloak display now</span>
+                </div>
+                <input type="checkbox" id="toggle-stealth-blackout" class="toggle-input">
+              </label>
+            </div>
+
+            <!-- Compact Telemetry Footer Strip -->
+            <div class="telemetry-strip">
+              <div class="telemetry-row-primary">
+                <div class="threat-badge threat-safe" id="threat-badge">
+                  <span class="threat-dot"></span>
+                  <span id="threat-badge-text">Calm Encounter</span>
+                </div>
+                <div class="gps-readout" id="gps-display" title="GPS Location Lock">
+                  <svg class="mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                  </svg>
+                  <span id="gps-coords">Accra, GH • 5.6037° N</span>
+                </div>
               </div>
 
-              <div class="legal-section-block">
-                <span class="legal-section-label">WHAT TO SAY CALMLY (VERBAL SCRIPT)</span>
-                <div class="calm-quote-box">
-                  <div class="calm-quote-text" id="legal-card-script">
-                    "Officer, good day. I am fully cooperating with you. Respectfully, under Article 18(2) of the 1992 Constitution, my phone is protected private correspondence and cannot be searched without a judicial warrant."
+              <div class="meter-track" title="Encounter Intensity">
+                <div class="meter-fill" id="threat-meter-fill"></div>
+              </div>
+
+              <div class="telemetry-row-sub">
+                <span class="telemetry-caption">Cryptographic Chain</span>
+                <div class="hash-readout" id="hash-display">
+                  <span id="chain-hash-ticker">SHA-256 • Standby</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT / MAIN COLUMN: Editorial Legal Counsel Card + Verbal Watermarking -->
+          <div class="shield-counsel-column">
+
+            <!-- Active Legal Counsel & Editorial Script Card -->
+            <div class="legal-card-stack" id="legal-card-stack">
+              <article class="legal-copilot-card status-safe tilt-card" id="active-legal-card">
+                <div class="legal-card-header">
+                  <div class="statute-pill-group">
+                    <span class="statute-citation-pill" id="legal-card-statute">1992 Constitution • Art. 14 & 18</span>
+                    <span class="legal-tag-authority" id="legal-card-authority">Supreme Court Precedent</span>
                   </div>
-                  <div class="calm-quote-actions">
+                </div>
+
+                <!-- Warm Ivory Apple-Wallet-Style Editorial Spoken Script Pass -->
+                <div class="calm-quote-box">
+                  <div class="quote-pass-header">
+                    <span class="quote-eyebrow">What to Say Calmly</span>
                     <button type="button" class="btn-whisper-speech" id="btn-whisper-active-script" title="Speak this script in earbud">
-                      <span>🎧</span> <span>Whisper Script</span>
+                      <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                      </svg>
+                      <span>Whisper to Earbud</span>
                     </button>
                   </div>
+                  <blockquote class="calm-quote-text" id="legal-card-script">
+                    “Officer, good day. I respect your work. Under Article 18(2) of the 1992 Constitution and the High Court ruling in Edmund Addo v. IGP, my phone is private correspondence and cannot be searched without a judicial warrant.”
+                  </blockquote>
                 </div>
+
+                <div class="legal-card-body">
+                  <div class="legal-bento-pair">
+                    <div class="legal-section-block">
+                      <span class="legal-section-label">Your Protected Right</span>
+                      <p class="legal-right-text" id="legal-card-right">
+                        Police officers have no statutory power to unlock your smartphone, confiscate your ignition keys, or collect cash spot-fines on the roadside.
+                      </p>
+                    </div>
+
+                    <div class="legal-section-block boundary-block">
+                      <span class="legal-section-label">Officer Legal Limit</span>
+                      <div class="officer-boundary-box" id="legal-card-boundary">
+                        Criminal Procedure Act (Act 30) & AG 2024 Directives prohibit arbitrary device searches and vehicle impoundment for minor traffic infractions.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            </div>
+
+            <!-- Tactical Verbal Watermark & Officer Badge Logger -->
+            <div class="watermark-section tilt-card">
+              <div class="watermark-top-row">
+                <div class="watermark-title-group">
+                  <div class="watermark-icon-badge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                      <circle cx="12" cy="10" r="3"/>
+                      <path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 class="watermark-label">Officer Badge Watermarking</h3>
+                    <p class="tip-text" id="watermark-tip-text">
+                      Say the officer's name or badge number aloud (e.g. <em>"Okay Sgt. Mensah, #44821"</em>) to auto-stamp it into evidence.
+                    </p>
+                  </div>
+                </div>
+                <span class="pinned-counter-pill" id="pinned-count-label">0 Logged</span>
               </div>
 
-              <div class="legal-section-block">
-                <span class="legal-section-label">OFFICER LEGAL BOUNDARY</span>
-                <div class="officer-boundary-box" id="legal-card-boundary">
-                  Ghana Police Service Instruction 118 & Criminal Procedure Code (Act 30) prohibit arbitrary searches. Searches require reasonable suspicion of indictable felony or a valid court warrant.
-                </div>
+              <div class="pinned-chips-container" id="pinned-chips-container">
+                <span class="empty-chips-placeholder" id="empty-chips-msg">No officer badges logged in this session yet.</span>
               </div>
+
+              <form class="badge-quick-input" id="form-pin-badge">
+                <input type="text" id="input-pin-badge" class="badge-input-field" placeholder="Log badge, rank, or patrol plate (e.g. Sgt. Mensah #44821, GP 2841)..." autocomplete="off">
+                <button type="submit" class="btn-pin-badge">Stamp Evidence</button>
+              </form>
             </div>
-          </article>
+
+          </div>
         </div>
 
-        <!-- Live Transcript Feed & Instant Scenario Simulator -->
+        <!-- Live Conversation Stream & Interactive Scenario Simulator -->
         <div class="transcript-section">
           <div class="transcript-header">
-            <span class="transcript-title">LIVE TRANSCRIPT STREAM & SPEECH RECOGNITION</span>
-            <span class="brand-subtitle" id="speech-engine-indicator">AUDIO ENGINE READY</span>
+            <div class="transcript-title-wrap">
+              <span class="live-audio-wave" aria-hidden="true">
+                <i></i><i></i><i></i><i></i>
+              </span>
+              <span class="transcript-title">Live Acoustic Stream & Scenario Test Bench</span>
+            </div>
+            <span class="engine-ready-tag" id="speech-engine-indicator">On-Device AI Ready</span>
           </div>
 
           <div class="transcript-feed" id="transcript-feed" role="log" aria-live="polite">
             <div class="transcript-line speaker-system">
-              <span class="transcript-timestamp">[SYSTEM]</span> Copilot armed. Tap scenario chip below or speak naturally into microphone.
+              <span class="transcript-timestamp">Ready</span> Tap any real-world Ghana encounter below to test instant legal matching, or speak into your mic.
             </div>
           </div>
 
-          <div class="simulator-label">⚡ INSTANT SCENARIO SIMULATOR (1-TAP TEST)</div>
+          <div class="simulator-header-row">
+            <span class="simulator-label">Simulate Real-World Ghana Police Encounters</span>
+            <span class="simulator-sub">Tap to test instant AI response</span>
+          </div>
+
           <div class="scenario-chips-grid">
             <button type="button" class="btn-scenario-chip" data-scenario="phone">
-              <span>📱</span> <span>"Unlock your phone let me check"</span>
+              <svg class="chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+              <div class="chip-copy">
+                <strong>Phone Search Demand</strong>
+                <span>“Unlock your phone let me check”</span>
+              </div>
             </button>
+
             <button type="button" class="btn-scenario-chip" data-scenario="keys">
-              <span>🔑</span> <span>"Give me your car keys right now"</span>
+              <svg class="chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg>
+              <div class="chip-copy">
+                <strong>Car Key Snatching</strong>
+                <span>“Give me your car keys right now”</span>
+              </div>
             </button>
+
             <button type="button" class="btn-scenario-chip" data-scenario="spotfine">
-              <span>💵</span> <span>"Pay 200 cedis spot fine cash"</span>
+              <svg class="chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
+              <div class="chip-copy">
+                <strong>Roadside Cash Demand</strong>
+                <span>“Pay 200 cedis spot fine cash”</span>
+              </div>
             </button>
+
             <button type="button" class="btn-scenario-chip" data-scenario="license">
-              <span>🪪</span> <span>"Where is your driver's license?"</span>
+              <svg class="chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect width="18" height="14" x="3" y="5" rx="2"/><path d="M7 15h4M15 15h2M7 11h2"/></svg>
+              <div class="chip-copy">
+                <strong>Physical License (24h Rule)</strong>
+                <span>“Where is your driver's license?”</span>
+              </div>
             </button>
+
             <button type="button" class="btn-scenario-chip" data-scenario="smoking">
-              <span>🌿</span> <span>"We suspect you of smoking"</span>
+              <svg class="chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <div class="chip-copy">
+                <strong>Narcotics / Bag Search</strong>
+                <span>“We suspect you of smoking”</span>
+              </div>
             </button>
+
             <button type="button" class="btn-scenario-chip" data-scenario="dreadlocks">
-              <span>🧑🏾‍🦱</span> <span>"Look at your dreadlocks, step out"</span>
+              <svg class="chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              <div class="chip-copy">
+                <strong>Dreadlocks / Profiling</strong>
+                <span>“Look at your dreadlocks, step out”</span>
+              </div>
             </button>
+
             <button type="button" class="btn-scenario-chip" data-scenario="watermark">
-              <span>👮</span> <span>"Okay Sergeant Mensah, badge 44821"</span>
+              <svg class="chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+              <div class="chip-copy">
+                <strong>Verbal Badge Watermark</strong>
+                <span>“Okay Sgt. Mensah, badge 44821”</span>
+              </div>
             </button>
+
             <button type="button" class="btn-scenario-chip chip-critical" data-scenario="arrest">
-              <span>🚨</span> <span>"You are under arrest! Give me phone!"</span>
+              <svg class="chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <div class="chip-copy">
+                <strong>Unlawful Arrest (Auto-SOS)</strong>
+                <span>“You are under arrest! Give me phone!”</span>
+              </div>
             </button>
           </div>
 
           <form class="custom-simulation-form" id="form-custom-sim">
-            <input type="text" id="input-custom-sim" class="input-sim-text" placeholder="Type custom officer statement to test Copilot..." autocomplete="off">
-            <button type="submit" class="btn-sim-send">Evaluate</button>
+            <input type="text" id="input-custom-sim" class="input-sim-text" placeholder="Or type any officer statement here to test the legal brain..." autocomplete="off">
+            <button type="submit" class="btn-sim-send">Analyze Statement</button>
           </form>
         </div>
 
@@ -263,90 +398,107 @@
       <section id="view-laws" class="view-pane">
         <div class="laws-container">
           
+          <div class="section-hero-header">
+            <div>
+              <span class="section-eyebrow">Republic of Ghana • Statutory Compendium</span>
+              <h1 class="section-display-title">Know Your Constitutional Rights</h1>
+            </div>
+            <p class="section-lead">
+              Every provision below is verified against the 1992 Constitution, Criminal Procedure Act (Act 30), Road Traffic Act (Act 683), and binding Superior Court jurisprudence.
+            </p>
+          </div>
+
           <!-- Search & Category Filters -->
           <div class="laws-search-block">
             <div class="laws-search-input-wrap">
-              <input type="text" id="laws-search-box" class="laws-search-input" placeholder="Search laws (e.g. phone, license, keys, female, 48 hours)..." autocomplete="off">
+              <svg class="search-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.3-4.3"/>
+              </svg>
+              <input type="text" id="laws-search-box" class="laws-search-input" placeholder="Search by topic or statute (e.g. phone warrant, 24-hour license, car keys, female search, 48 hours)..." autocomplete="off">
               <button type="button" class="laws-search-clear" id="btn-clear-laws-search" style="display:none;">✕</button>
             </div>
 
             <div class="filter-pills-scroll" id="laws-filter-pills">
-              <button type="button" class="pill-filter active" data-category="all">All Legal Protections</button>
-              <button type="button" class="pill-filter" data-category="searches">Searches & Phones</button>
-              <button type="button" class="pill-filter" data-category="traffic">Vehicle & Traffic</button>
-              <button type="button" class="pill-filter" data-category="arrests">Arrests & 48 Hours</button>
-              <button type="button" class="pill-filter" data-category="extortion">Spot-Fines & Bribery</button>
-              <button type="button" class="pill-filter" data-category="women">Female Body Search</button>
+              <button type="button" class="pill-filter active" data-category="all">All Protections</button>
+              <button type="button" class="pill-filter" data-category="searches">Phone & Searches</button>
+              <button type="button" class="pill-filter" data-category="traffic">MTTD & Traffic</button>
+              <button type="button" class="pill-filter" data-category="arrests">Arrest & 48h Rule</button>
+              <button type="button" class="pill-filter" data-category="extortion">Spot-Fines & Keys</button>
+              <button type="button" class="pill-filter" data-category="women">Female Search Protocol</button>
             </div>
           </div>
 
           <!-- Police PPSB & Emergency Hotlines Banner -->
           <div class="hotlines-banner">
             <div class="hotline-item">
-              <span class="hotline-label">GPS PPSB WHATSAPP</span>
-              <a href="https://wa.me/233206639121" target="_blank" rel="noopener" class="hotline-value ppsb">020 663 9121</a>
+              <span class="hotline-label">PPSB WhatsApp Evidence Desk</span>
+              <a href="https://wa.me/233206639121" target="_blank" rel="noopener" class="hotline-value ppsb">020 663 9121 ↗</a>
             </div>
             <div class="hotline-item">
-              <span class="hotline-label">POLICE EMERGENCY</span>
+              <span class="hotline-label">National Police Emergency</span>
               <a href="tel:191" class="hotline-value">191 / 112</a>
             </div>
             <div class="hotline-item">
-              <span class="hotline-label">POLICE COMPLAINTS</span>
-              <a href="tel:18555" class="hotline-value">18555 (Toll Free)</a>
+              <span class="hotline-label">PPSB Direct Voice Line</span>
+              <a href="tel:0550323323" class="hotline-value">055 032 3323</a>
             </div>
           </div>
 
           <!-- Statutory Accordion Cards Container -->
           <div class="laws-list" id="statutory-cards-container">
-            <!-- Rendered by js/app.js or js/data/ghana-laws.js -->
+            <!-- Dynamically rendered by js/app.js -->
           </div>
 
           <!-- Quick Rights Cheat-Sheet Table -->
           <div class="cheat-sheet-box">
             <div class="cheat-sheet-title">
-              <span>📋</span> <span>QUICK RIGHTS CHEAT-SHEET (GHANA)</span>
+              <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              <span>Roadside Rapid Reference Matrix</span>
             </div>
-            <table class="cheat-sheet-table">
-              <thead>
-                <tr>
-                  <th>Encounter Scenario</th>
-                  <th>Your Absolute Right</th>
-                  <th>Legal Authority</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><strong>Phone Search Demand</strong></td>
-                  <td>Refuse password/unlock. No search without judicial court warrant.</td>
-                  <td>Const. Art 18(2)</td>
-                </tr>
-                <tr>
-                  <td><strong>Car Key Confiscation</strong></td>
-                  <td>Keys cannot be seized. You drive vehicle to station if impounded.</td>
-                  <td>Act 30 Sec. 89</td>
-                </tr>
-                <tr>
-                  <td><strong>Spot-Fine Cash Demand</strong></td>
-                  <td>Cash spot-fines are illegal. Fines are strictly levied by court magistrates.</td>
-                  <td>Road Traffic Reg.</td>
-                </tr>
-                <tr>
-                  <td><strong>Physical Body Search (Female)</strong></td>
-                  <td>Female citizens can ONLY be searched by a female officer with decency.</td>
-                  <td>Act 30 Sec. 7</td>
-                </tr>
-                <tr>
-                  <td><strong>Physical Arrest</strong></td>
-                  <td>Must state cause immediately. Maximum 48 hours to produce before court.</td>
-                  <td>Const. Art 14(2)(3)</td>
-                </tr>
-                <tr>
-                  <td><strong>Physical Recording</strong></td>
-                  <td>Citizens have the right to record police officers performing public duties.</td>
-                  <td>Const. Art 21(1)(f)</td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="table-responsive">
+              <table class="cheat-sheet-table">
+                <thead>
+                  <tr>
+                    <th>Encounter Scenario</th>
+                    <th>Your Protected Right</th>
+                    <th>Statutory Authority</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Smartphone / Laptop Inspection</strong></td>
+                    <td>Politely refuse passcode/unlock. Digital contents require a High Court / Magistrate warrant.</td>
+                    <td>Const. Art. 18(2) • Edmund Addo v. IGP</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Physical Driver's License Missing</strong></td>
+                    <td>Not an arrestable offense. You have 24 hours to produce it at a chosen police station.</td>
+                    <td>Road Traffic Act 683, Sec. 120(6)</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Snatching Ignition Keys / Impound</strong></td>
+                    <td>Officers cannot seize keys or impound cars for minor traffic offenses.</td>
+                    <td>AG 2024 Directive • MTTD Orders</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Roadside Cash “Spot Fines”</strong></td>
+                    <td>Zero cash to officers on the road. Demanding cash is Extortion.</td>
+                    <td>L.I. 2180 Reg. 157 • Act 29 Sec. 239</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Body Search of a Female Citizen</strong></td>
+                    <td>Strictly by a female officer only, with decency and never stripped in public.</td>
+                    <td>Criminal Procedure Act 30, Sec. 8(3)</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Detention & Police Custody</strong></td>
+                    <td>Immediate reason in a language understood + lawyer + 48-hour court limit (incl. weekends).</td>
+                    <td>Const. Art. 14(2)–(3) • Martin Kpebu</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
 
         </div>
@@ -358,46 +510,59 @@
       <section id="view-vault" class="view-pane">
         <div class="vault-container">
           
+          <div class="section-hero-header">
+            <div>
+              <span class="section-eyebrow">Ghana Evidence Act (NRCD 323) Compliant</span>
+              <h1 class="section-display-title">Cryptographic Evidence Vault</h1>
+            </div>
+            <p class="section-lead">
+              Every 5-second audio/video segment, transcript line, and spoken officer badge is sealed locally on your device with a cumulative SHA-256 chain of custody.
+            </p>
+          </div>
+
           <!-- Vault Telemetry & Storage Card -->
           <div class="vault-telemetry-card">
-            <div class="deck-header">
-              <span class="settings-title">TAMPER-PROOF EVIDENCE VAULT</span>
-              <span class="deck-badge">LOCAL INDEXED-DB AES-256</span>
-            </div>
-
             <div class="vault-stats-grid">
               <div class="stat-metric-card">
                 <div class="stat-metric-val" id="vault-stat-count">0</div>
-                <div class="stat-metric-label">Recordings</div>
+                <div class="stat-metric-label">Sealed Dossiers</div>
               </div>
               <div class="stat-metric-card">
                 <div class="stat-metric-val" id="vault-stat-size">0.0 MB</div>
-                <div class="stat-metric-label">Local Storage</div>
+                <div class="stat-metric-label">On-Device Vault</div>
               </div>
               <div class="stat-metric-card">
                 <div class="stat-metric-val" id="vault-stat-badges">0</div>
-                <div class="stat-metric-label">Officers Pinned</div>
+                <div class="stat-metric-label">Officers Logged</div>
               </div>
             </div>
 
             <div class="vault-security-pill">
-              <span>🔒 Court-Admissible SHA-256 Integrity Chain</span>
-              <span>100% OFFLINE ACTIVE</span>
+              <span class="security-check">
+                <svg class="mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                SHA-256 Chain of Custody Verified
+              </span>
+              <span class="free-tier-tag">100% Free Local Storage</span>
             </div>
           </div>
 
           <!-- Evidence Sessions List -->
           <div class="vault-records-header">
-            <span class="vault-section-heading">SECURED ENCOUNTER DOSSIERS</span>
-            <button type="button" class="header-btn" id="btn-refresh-vault">↻ Refresh</button>
+            <span class="vault-section-heading">Recorded Encounter Dossiers</span>
+            <button type="button" class="header-btn" id="btn-refresh-vault">Refresh Vault</button>
           </div>
 
           <div class="vault-records-list" id="vault-records-list">
-            <!-- If empty, shows default placeholder -->
             <div class="vault-empty-state" id="vault-empty-state">
-              <span style="font-size:28px;">🛡️</span>
-              <p>No encounters recorded yet.</p>
-              <span style="font-size:11px;">When you activate the Live Shield and record audio or video, cryptographic tamper-proof files will be securely vaulted here.</span>
+              <div class="empty-vault-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  <path d="M12 8v4"/>
+                  <path d="M12 16h.01"/>
+                </svg>
+              </div>
+              <p>Your Evidence Vault is currently empty</p>
+              <span>Activate Pocket Counsel during any encounter to automatically record and seal tamper-proof audio, video, GPS coordinates, and officer badges here.</span>
             </div>
           </div>
 
@@ -405,127 +570,133 @@
       </section>
 
       <!-- ================================================================
-           TAB 4: EMERGENCY CONTACTS, LAWYER & PRO SCALE
+           TAB 4: EMERGENCY CONTACTS, LAWYER & PRO CLOUD
            ================================================================ -->
       <section id="view-contacts" class="view-pane">
         <div class="contacts-container">
           
-          <!-- Emergency Contacts Form Card -->
-          <div class="settings-card">
-            <div class="deck-header">
-              <span class="settings-title">MANDATORY EMERGENCY CONTACTS</span>
-              <span class="deck-badge" id="contacts-status-badge">NOT CONFIGURED</span>
+          <div class="section-hero-header">
+            <div>
+              <span class="section-eyebrow">Safety Network & Fail-Safe Backup</span>
+              <h1 class="section-display-title">Emergency Dispatch & Cloud</h1>
             </div>
-            <p class="settings-desc">
-              When a Critical Threat is triggered (e.g. violent arrest or force), CitizenShield dispatches your exact GPS coordinates, live legal transcript, and officer badges via SMS and WhatsApp.
+            <p class="section-lead">
+              Configure your two mandatory trusted contacts and legal counsel. If an encounter escalates to unlawful arrest or force, CitizenShield automatically dispatches your GPS location and live transcript summary.
             </p>
-
-            <form id="form-emergency-contacts" class="contacts-form">
-              <!-- Contact #1 -->
-              <div class="contact-entry-group">
-                <label class="contact-label">EMERGENCY CONTACT #1 (PRIMARY NEXT OF KIN)</label>
-                <div class="contact-inputs-row">
-                  <input type="text" id="contact1-name" class="contact-input" placeholder="Name (e.g. Kwesi Mensah)" required>
-                  <input type="tel" id="contact1-phone" class="contact-input" placeholder="Ghana Tel (+233...)" required>
-                </div>
-              </div>
-
-              <!-- Contact #2 -->
-              <div class="contact-entry-group">
-                <label class="contact-label">EMERGENCY CONTACT #2 (TRUSTED FRIEND / SPOUSE)</label>
-                <div class="contact-inputs-row">
-                  <input type="text" id="contact2-name" class="contact-input" placeholder="Name (e.g. Akua Osei)" required>
-                  <input type="tel" id="contact2-phone" class="contact-input" placeholder="Ghana Tel (+233...)" required>
-                </div>
-              </div>
-
-              <!-- Lawyer / Legal Counsel -->
-              <div class="contact-entry-group">
-                <label class="contact-label">PERSONAL LAWYER OR LEGAL AID COMMISSION (OPTIONAL)</label>
-                <div class="contact-inputs-row">
-                  <input type="text" id="lawyer-name" class="contact-input" placeholder="Lawyer Name / Legal Aid">
-                  <input type="tel" id="lawyer-phone" class="contact-input" placeholder="Tel (+233...)">
-                </div>
-              </div>
-
-              <div class="contacts-actions-row">
-                <button type="submit" class="btn-primary-action">Save Contacts</button>
-                <button type="button" class="btn-secondary-action" id="btn-load-demo-contacts">Load Demo Contacts</button>
-              </div>
-            </form>
           </div>
 
-          <!-- Auto-SOS & Stealth Preferences -->
-          <div class="settings-card">
-            <span class="settings-title">SHIELD AUTOMATION PREFERENCES</span>
-            
-            <div class="deck-switches" style="grid-template-columns: 1fr;">
-              <label class="switch-pill" for="toggle-auto-sos">
-                <div class="switch-info">
-                  <span class="switch-title">Auto-SOS on Critical Threat</span>
-                  <span class="switch-desc">Launches 5-second countdown when arrest or force is detected</span>
-                </div>
-                <input type="checkbox" id="toggle-auto-sos" class="toggle-input" checked>
-              </label>
+          <div class="contacts-bento-grid">
+            <!-- Emergency Contacts Form Card -->
+            <div class="settings-card">
+              <div class="deck-header">
+                <span class="settings-title">Trusted Emergency Circle</span>
+                <span class="deck-mode-tag" id="contacts-status-badge">Not Configured</span>
+              </div>
 
-              <label class="switch-pill" for="toggle-shake-stealth">
-                <div class="switch-info">
-                  <span class="switch-title">Shake Phone for Stealth Screen</span>
-                  <span class="switch-desc">Vigorous phone shake immediately blacks out screen</span>
+              <form id="form-emergency-contacts" class="contacts-form">
+                <div class="contact-entry-group">
+                  <label class="contact-label">Primary Emergency Contact (Next of Kin)</label>
+                  <div class="contact-inputs-row">
+                    <input type="text" id="contact1-name" class="contact-input" placeholder="Full Name (e.g. Kwesi Mensah)" required>
+                    <input type="tel" id="contact1-phone" class="contact-input" placeholder="Phone / WhatsApp (+233...)" required>
+                  </div>
                 </div>
-                <input type="checkbox" id="toggle-shake-stealth" class="toggle-input" checked>
-              </label>
+
+                <div class="contact-entry-group">
+                  <label class="contact-label">Secondary Trusted Contact</label>
+                  <div class="contact-inputs-row">
+                    <input type="text" id="contact2-name" class="contact-input" placeholder="Full Name (e.g. Akua Osei)" required>
+                    <input type="tel" id="contact2-phone" class="contact-input" placeholder="Phone / WhatsApp (+233...)" required>
+                  </div>
+                </div>
+
+                <div class="contact-entry-group">
+                  <label class="contact-label">Personal Lawyer or Legal Aid Counsel (Optional)</label>
+                  <div class="contact-inputs-row">
+                    <input type="text" id="lawyer-name" class="contact-input" placeholder="Lawyer / Chambers Name">
+                    <input type="tel" id="lawyer-phone" class="contact-input" placeholder="Direct Phone (+233...)">
+                  </div>
+                </div>
+
+                <div class="contacts-actions-row">
+                  <button type="submit" class="btn-primary-action">Save Safety Circle</button>
+                  <button type="button" class="btn-secondary-action" id="btn-load-demo-contacts">Fill Demo Contacts</button>
+                </div>
+              </form>
             </div>
-          </div>
 
-          <!-- CitizenShield Cloud Vault Pro (Paywall Card) -->
-          <div class="pro-card">
-            <span class="pro-badge">PRO CLOUD SCALE</span>
-            <div class="pro-title">CITIZENSHIELD CLOUD VAULT PRO</div>
-            <p class="settings-desc">
-              All on-device recordings, legal compendium, audio whispering, and local court dossier generation are <strong>100% free forever</strong>. Pro provides off-site fail-safe protection.
-            </p>
+            <!-- Right Column: Automation Preferences + Cloud Vault Pro -->
+            <div class="contacts-side-stack">
+              <div class="settings-card">
+                <span class="settings-title">Autonomous Protection Rules</span>
+                
+                <div class="deck-switches" style="grid-template-columns: 1fr; margin-top: 12px;">
+                  <label class="switch-pill" for="toggle-auto-sos">
+                    <div class="switch-info">
+                      <span class="switch-title">Auto-SOS on Critical Arrest</span>
+                      <span class="switch-desc">5-second countdown if arrest or seizure is detected</span>
+                    </div>
+                    <input type="checkbox" id="toggle-auto-sos" class="toggle-input" checked>
+                  </label>
 
-            <table class="pro-comparison-table">
-              <thead>
-                <tr>
-                  <th>CAPABILITY</th>
-                  <th class="col-free">FREE (LOCAL)</th>
-                  <th class="col-pro">PRO CLOUD</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Ghana Legal Copilot & TTS</td>
-                  <td class="col-free">✓ Unlimited</td>
-                  <td class="col-pro">✓ Unlimited</td>
-                </tr>
-                <tr>
-                  <td>Local Encrypted Storage</td>
-                  <td class="col-free">✓ IndexedDB</td>
-                  <td class="col-pro">✓ IndexedDB</td>
-                </tr>
-                <tr>
-                  <td>Off-Site Live Cloud Backup</td>
-                  <td class="col-free">—</td>
-                  <td class="col-pro">✓ Cloudflare R2 (5s Stream)</td>
-                </tr>
-                <tr>
-                  <td>Confiscation / Smash Proof</td>
-                  <td class="col-free">—</td>
-                  <td class="col-pro">✓ Guaranteed Safe</td>
-                </tr>
-                <tr>
-                  <td>Direct SMS Gateway Dispatch</td>
-                  <td class="col-free">Manual App Link</td>
-                  <td class="col-pro">✓ Instant Cellular Gateway</td>
-                </tr>
-              </tbody>
-            </table>
+                  <label class="switch-pill" for="toggle-shake-stealth">
+                    <div class="switch-info">
+                      <span class="switch-title">Shake Phone to Cloak Screen</span>
+                      <span class="switch-desc">Switches to fake OLED lock screen when shaken</span>
+                    </div>
+                    <input type="checkbox" id="toggle-shake-stealth" class="toggle-input" checked>
+                  </label>
+                </div>
+              </div>
 
-            <button type="button" class="btn-upgrade-pro" id="btn-open-pro-modal">
-              Upgrade to Cloud Vault Pro • GH₵ 25 / Month
-            </button>
+              <!-- CitizenShield Cloud Vault Pro (Paywall Card) -->
+              <div class="pro-card tilt-card">
+                <div class="pro-header-row">
+                  <span class="pro-badge">Confiscation-Proof Tier</span>
+                  <span class="pro-price">GH₵ 25<small>/mo</small></span>
+                </div>
+                <div class="pro-title">CitizenShield Cloud Vault</div>
+                <p class="settings-desc">
+                  All on-device legal coaching, earbud whispers, and local evidence storage are <strong>100% free forever</strong>. Upgrade to stream encrypted 5-second chunks directly to off-site cloud storage in real time—so even if your phone is seized or smashed, your evidence survives.
+                </p>
+
+                <table class="pro-comparison-table">
+                  <thead>
+                    <tr>
+                      <th>Feature</th>
+                      <th class="col-free">Free</th>
+                      <th class="col-pro">Cloud Pro</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Live Legal Copilot & Laws</td>
+                      <td class="col-free">Included</td>
+                      <td class="col-pro">Included</td>
+                    </tr>
+                    <tr>
+                      <td>Local SHA-256 Vault</td>
+                      <td class="col-free">Unlimited</td>
+                      <td class="col-pro">Unlimited</td>
+                    </tr>
+                    <tr>
+                      <td>Real-Time 5s Off-Site Stream</td>
+                      <td class="col-free">—</td>
+                      <td class="col-pro">Cloudflare R2</td>
+                    </tr>
+                    <tr>
+                      <td>Automated SMS SOS Gateway</td>
+                      <td class="col-free">WhatsApp</td>
+                      <td class="col-pro">Direct SMS + WA</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <button type="button" class="btn-upgrade-pro" id="btn-open-pro-modal">
+                  Activate Cloud Vault (MoMo / Card)
+                </button>
+              </div>
+            </div>
           </div>
 
         </div>
@@ -534,24 +705,37 @@
     </main>
 
     <!-- ====================================================================
-         STICKY BOTTOM NAVIGATION BAR
+         FLOATING GLASSMORPHIC BOTTOM DOCK (Apple VisionOS / iOS 18 Style)
          ==================================================================== -->
-    <nav class="bottom-nav" aria-label="Bottom Navigation">
+    <nav class="bottom-nav" aria-label="Primary Navigation">
       <button type="button" class="nav-item active" data-tab="view-shield" id="nav-btn-shield">
-        <span class="nav-icon">🛡️</span>
+        <svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
         <span class="nav-label">Live Shield</span>
       </button>
       <button type="button" class="nav-item" data-tab="view-laws" id="nav-btn-laws">
-        <span class="nav-icon">⚖️</span>
+        <svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
+        </svg>
         <span class="nav-label">Ghana Laws</span>
       </button>
       <button type="button" class="nav-item" data-tab="view-vault" id="nav-btn-vault">
-        <span class="nav-icon">🗄️</span>
+        <svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="18" height="18" x="3" y="3" rx="2"/>
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 9V3"/>
+        </svg>
         <span class="nav-label">Evidence Vault</span>
       </button>
       <button type="button" class="nav-item" data-tab="view-contacts" id="nav-btn-contacts">
-        <span class="nav-icon">⚙️</span>
-        <span class="nav-label">Contacts & Pro</span>
+        <svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        <span class="nav-label">Safety & Cloud</span>
       </button>
     </nav>
 
@@ -563,7 +747,7 @@
 
       <div class="stealth-clock-wrap">
         <div class="stealth-clock" id="stealth-clock-text">12:00</div>
-        <div class="stealth-date" id="stealth-date-text">MON, 17 OCT</div>
+        <div class="stealth-date" id="stealth-date-text">SAT, 17 OCT</div>
       </div>
 
       <div class="stealth-unlock-container">
@@ -571,9 +755,12 @@
           <svg class="stealth-unlock-svg" viewBox="0 0 64 64">
             <circle cx="32" cy="32" r="30" class="stealth-unlock-progress" id="stealth-progress-circle"></circle>
           </svg>
-          <span class="stealth-unlock-icon">🔓</span>
+          <svg class="stealth-lock-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
+          </svg>
         </div>
-        <div class="stealth-unlock-prompt">PRESS & HOLD 1.5s TO RESTORE</div>
+        <div class="stealth-unlock-prompt">Hold 1.5s to Restore HUD</div>
       </div>
     </div>
 
@@ -583,33 +770,36 @@
     <div class="modal-backdrop" id="modal-onboarding" role="dialog" aria-modal="true">
       <div class="tactical-modal-card">
         <div class="modal-head">
-          <span class="modal-title">CITIZENSHIELD GHANA • ONBOARDING</span>
+          <div>
+            <span class="section-eyebrow">Quick Safety Setup</span>
+            <h2 class="modal-title">Your Emergency Safety Circle</h2>
+          </div>
           <button type="button" class="btn-modal-close" id="btn-close-onboarding">✕</button>
         </div>
         <div class="modal-body">
-          <p style="font-size:12px; color:var(--text-secondary); line-height:1.5;">
-            Welcome to <strong>CitizenShield Ghana</strong>. For your physical safety during police stops, Ghanaian civic security best practices mandate having <strong>two emergency contacts</strong> configured so you can trigger instant SOS if detained.
+          <p class="modal-lead">
+            Before your first trip, set <strong>two trusted emergency contacts</strong>. If CitizenShield ever detects an unlawful arrest or phone seizure, it will automatically send them your live GPS pin and encounter transcript.
           </p>
 
           <form id="form-onboarding-contacts">
             <div class="contact-entry-group">
-              <label class="contact-label">CONTACT 1 (NEXT OF KIN)</label>
+              <label class="contact-label">Primary Contact (Family / Next of Kin)</label>
               <div class="contact-inputs-row">
                 <input type="text" id="onboard-name1" class="contact-input" placeholder="Name" value="Kofi Adomako" required>
-                <input type="tel" id="onboard-phone1" class="contact-input" placeholder="+233244123456" value="+233 24 412 3456" required>
+                <input type="tel" id="onboard-phone1" class="contact-input" placeholder="+233 24 412 3456" value="+233 24 412 3456" required>
               </div>
             </div>
 
-            <div class="contact-entry-group">
-              <label class="contact-label">CONTACT 2 (TRUSTED FRIEND)</label>
+            <div class="contact-entry-group" style="margin-top: 12px;">
+              <label class="contact-label">Secondary Trusted Contact</label>
               <div class="contact-inputs-row">
                 <input type="text" id="onboard-name2" class="contact-input" placeholder="Name" value="Ama Serwaa" required>
-                <input type="tel" id="onboard-phone2" class="contact-input" placeholder="+233201987654" value="+233 20 198 7654" required>
+                <input type="tel" id="onboard-phone2" class="contact-input" placeholder="+233 20 198 7654" value="+233 20 198 7654" required>
               </div>
             </div>
 
-            <div class="contacts-actions-row" style="margin-top:12px;">
-              <button type="submit" class="btn-primary-action">Arm Shield & Enter</button>
+            <div class="contacts-actions-row" style="margin-top: 20px;">
+              <button type="submit" class="btn-primary-action" style="width: 100%;">Save & Enter CitizenShield</button>
             </div>
           </form>
         </div>
@@ -621,36 +811,34 @@
          ==================================================================== -->
     <div class="modal-backdrop" id="modal-sos-countdown" role="alertdialog" aria-modal="true">
       <div class="tactical-modal-card critical-alert">
-        <div class="modal-head" style="background:var(--critical-crimson-dim);">
-          <span class="modal-title critical">🚨 CRITICAL THREAT: ARREST / FORCE DETECTED</span>
+        <div class="modal-head critical-head">
+          <span class="modal-title critical">Critical Escalation Detected</span>
           <button type="button" class="btn-modal-close" id="btn-abort-sos-x">✕</button>
         </div>
 
         <div class="modal-body">
           <div class="countdown-visual-wrap" id="sos-countdown-view">
             <div class="countdown-number" id="sos-countdown-timer">5</div>
-            <div class="countdown-subtext">DISPATCHING SOS IN 5 SECONDS</div>
-            <p style="font-size:11px; color:var(--text-secondary); text-align:center; margin-top:10px;">
-              Police arrest or physical coercion detected. CitizenShield will alert your 2 emergency contacts and transmit your GPS coordinates.
+            <div class="countdown-subtext">Dispatching Emergency SOS</div>
+            <p class="modal-lead" style="text-align:center;">
+              Arrest or physical coercion detected. Sending your live GPS coordinates, logged officer badges, and transcript summary to your Safety Circle.
             </p>
 
-            <div class="sos-summary-actions" style="width:100%; margin-top:16px;">
+            <div class="sos-summary-actions">
               <button type="button" class="btn-sos-abort" id="btn-cancel-sos">Cancel (False Alarm)</button>
-              <button type="button" class="btn-sos-confirm" id="btn-dispatch-sos-now">Dispatch Now</button>
+              <button type="button" class="btn-sos-confirm" id="btn-dispatch-sos-now">Send Immediately</button>
             </div>
           </div>
 
           <!-- Dispatched Confirmation Card -->
           <div class="sos-dispatched-card" id="sos-dispatched-view">
-            <div style="font-family:var(--font-display); font-weight:800; color:#4ADE80; font-size:13px;">
-              ✓ SOS DISPATCHED TO CONTACTS
-            </div>
-            <p style="font-size:11px; color:var(--text-secondary); line-height:1.4;" id="sos-dispatched-details">
-              Alert dispatched with GPS coordinates, latest officer badges, and legal transcript snippet.
+            <div class="dispatched-badge">SOS Packet Dispatched</div>
+            <p class="modal-lead" id="sos-dispatched-details">
+              Alert prepared with your exact GPS coordinates, captured officer badges, and live legal transcript.
             </p>
-            <div style="display:flex; flex-direction:column; gap:6px;">
-              <a href="#" class="btn-vault-action btn-whatsapp" id="sos-whatsapp-link" target="_blank" style="justify-content:center; padding:8px;">
-                🟢 Open WhatsApp SOS Dispatch
+            <div class="dispatched-actions">
+              <a href="#" class="btn-vault-action btn-whatsapp" id="sos-whatsapp-link" target="_blank">
+                Send Live Location via WhatsApp ↗
               </a>
               <button type="button" class="btn-secondary-action" id="btn-dismiss-dispatched-sos">
                 Return to Shield
@@ -667,22 +855,21 @@
     <div class="modal-backdrop" id="modal-pro" role="dialog" aria-modal="true">
       <div class="tactical-modal-card">
         <div class="modal-head">
-          <span class="modal-title">CITIZENSHIELD CLOUD VAULT PRO</span>
+          <div>
+            <span class="section-eyebrow">Off-Site Fail-Safe</span>
+            <h2 class="modal-title">CitizenShield Cloud Vault Pro</h2>
+          </div>
           <button type="button" class="btn-modal-close" id="btn-close-pro">✕</button>
         </div>
         <div class="modal-body">
-          <p style="font-size:12px; color:var(--text-secondary); line-height:1.5;">
-            <strong>Confiscation-Proof Guarantee:</strong> Every 5 seconds during an active stop, encrypted audio and video chunks stream directly to off-site cloud storage. If your device is seized, locked, or broken by an officer, your evidence is already secure in the cloud.
+          <p class="modal-lead">
+            <strong>Confiscation-Proof Protection:</strong> Every 5 seconds during an encounter, encrypted audio and video segments stream directly to Cloudflare R2. Even if your phone is seized or destroyed, your legal evidence is already safe off-site.
           </p>
-          <div style="background:var(--bg-surface); padding:12px; border-radius:var(--radius-sm); border:1px solid var(--border-medium);">
-            <div style="font-family:var(--font-mono); font-size:11px; color:var(--civic-gold);">
-              SUBSCRIPTION: GH₵ 25 / MONTH
-            </div>
-            <div style="font-size:10px; color:var(--text-tertiary); margin-top:4px;">
-              Supports Mobile Money (MTN MoMo, Telecel Cash, AT Money) and Cards.
-            </div>
+          <div class="pro-pricing-box">
+            <div class="pro-pricing-tier">GH₵ 25 / month</div>
+            <div class="pro-pricing-methods">Instant activation via MTN MoMo, Telecel Cash, AT Money, or Visa/Mastercard.</div>
           </div>
-          <button type="button" class="btn-primary-action" id="btn-momo-upgrade">Simulate MoMo Upgrade</button>
+          <button type="button" class="btn-primary-action" id="btn-momo-upgrade" style="width: 100%; margin-top: 14px;">Activate with Mobile Money</button>
         </div>
       </div>
     </div>
