@@ -758,10 +758,88 @@
   }
 
   function initLegalCardWhisper() {
+    const calmQuoteBox = document.getElementById('calm-quote-box');
+    const voiceBadge = document.getElementById('neural-voice-badge');
+    const voiceStatusText = document.getElementById('neural-voice-status-text');
+    const whisperLabel = document.getElementById('btn-whisper-label');
+    const personaPills = document.querySelectorAll('#voice-persona-pills .voice-pill');
+    const quickSituationPills = document.querySelectorAll('#quick-situation-pills .situation-pill');
+
+    const personaLabels = {
+      ezinne: 'Ezinne • Natural West African',
+      abeo: 'Abeo • Natural West African',
+      sonia: 'Sonia • British Barrister'
+    };
+
+    // Sync initial active persona pill
+    if (window.MediaEngine) {
+      const currentPersona = window.MediaEngine.getVoicePersona();
+      personaPills.forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-voice-persona') === currentPersona);
+      });
+
+      window.MediaEngine.on('speechStart', (info) => {
+        OrbState.voicePulse = 0.95;
+        calmQuoteBox?.classList.add('is-speaking');
+        voiceBadge?.classList.add('speaking');
+        DOM.btnWhisperActiveScript?.classList.add('speaking');
+        if (whisperLabel) whisperLabel.textContent = 'Stop Voice';
+        if (voiceStatusText) {
+          voiceStatusText.textContent = info.engine === 'neural'
+            ? `Speaking (${personaLabels[info.persona] || 'Neural'})`
+            : 'Speaking (Offline Voice)';
+        }
+      });
+
+      window.MediaEngine.on('speechEnd', () => {
+        calmQuoteBox?.classList.remove('is-speaking');
+        voiceBadge?.classList.remove('speaking');
+        DOM.btnWhisperActiveScript?.classList.remove('speaking');
+        if (whisperLabel) whisperLabel.textContent = 'Speak Naturally';
+        if (voiceStatusText) voiceStatusText.textContent = 'Natural Human Voice';
+      });
+    }
+
+    // Voice Persona Selector Pills
+    personaPills.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const persona = btn.getAttribute('data-voice-persona') || 'ezinne';
+        personaPills.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        if (window.MediaEngine) {
+          window.MediaEngine.setVoicePersona(persona);
+        }
+        showToast(`Counsel Voice: ${personaLabels[persona] || persona}`, 'safe');
+
+        // Immediately speak a brief confirmation or current script if user clicked a voice
+        const scriptText = DOM.legalCardScript?.textContent?.replace(/^[“"\s]+|[”"\s]+$/g, '') || '';
+        if (scriptText && window.MediaEngine) {
+          window.MediaEngine.whisper(scriptText, true);
+        }
+      });
+    });
+
+    // Instant 1-Tap Situation Switcher Pills at top of Legal Card
+    quickSituationPills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        quickSituationPills.forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        const utterance = pill.getAttribute('data-quick-utterance');
+        if (utterance) {
+          handleSimulatedTranscript(utterance, 'Officer');
+        }
+      });
+    });
+
+    // Speak / Stop Button
     DOM.btnWhisperActiveScript?.addEventListener('click', () => {
-      const scriptText = DOM.legalCardScript?.textContent?.replace(/^[“"]|[”"]$/g, '') || '';
+      if (window.MediaEngine && window.MediaEngine.isSpeaking) {
+        window.MediaEngine.stopSpeech();
+        return;
+      }
+      const scriptText = DOM.legalCardScript?.textContent?.replace(/^[“"\s]+|[”"\s]+$/g, '') || '';
       if (scriptText) {
-        OrbState.voicePulse = 0.9;
+        OrbState.voicePulse = 0.95;
         if (window.MediaEngine) {
           window.MediaEngine.whisper(scriptText, true);
         } else if ('speechSynthesis' in window) {
@@ -769,7 +847,6 @@
           u.rate = 1.0;
           window.speechSynthesis.speak(u);
         }
-        showToast('Whispering calm legal script into earbud...', 'safe');
       }
     });
   }
@@ -1655,14 +1732,41 @@
       // Depth-sort back to front
       projected.sort((a, bPt) => bPt.z - a.z);
 
+      // Keep pulsing smoothly while neural voice is actively speaking
+      if (window.MediaEngine && window.MediaEngine.isSpeaking) {
+        OrbState.voicePulse = Math.max(OrbState.voicePulse, 0.55 + Math.sin(t * 7) * 0.25);
+      }
+
+      // Draw subtle 3D geodesic constellation filaments between nearby front-hemisphere nodes
+      ctx.lineWidth = 0.75;
+      for (let i = 0; i < projected.length; i++) {
+        const p1 = projected[i];
+        if (p1.isRing || p1.z > 15) continue; // front hemisphere only for crisp clarity
+        for (let j = i + 1; j < projected.length; j++) {
+          const p2 = projected[j];
+          if (p2.isRing || p2.z > 15) continue;
+          const dx = p1.sx - p2.sx;
+          const dy = p1.sy - p2.sy;
+          const distSq = dx * dx + dy * dy;
+          if (distSq < 580) {
+            const lineAlpha = (1 - distSq / 580) * 0.22;
+            ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${lineAlpha})`;
+            ctx.beginPath();
+            ctx.moveTo(p1.sx, p1.sy);
+            ctx.lineTo(p2.sx, p2.sy);
+            ctx.stroke();
+          }
+        }
+      }
+
       for (let i = 0; i < projected.length; i++) {
         const pt = projected[i];
         const depthNorm = (pt.z + baseRadius) / (2 * baseRadius); // 0 front, 1 back
-        const alpha = Math.max(0.12, Math.min(0.95, 1 - depthNorm * 0.78));
-        const dotSize = pt.isRing ? (1.3 * pt.scale) : (1.85 * pt.scale);
+        const alpha = Math.max(0.12, Math.min(0.96, 1 - depthNorm * 0.78));
+        const dotSize = pt.isRing ? (1.3 * pt.scale) : (1.95 * pt.scale);
 
         ctx.fillStyle = pt.isRing
-          ? `rgba(229, 184, 105, ${alpha * 0.65})`
+          ? `rgba(229, 184, 105, ${alpha * 0.72})`
           : `rgba(${r}, ${g}, ${b}, ${alpha})`;
         ctx.beginPath();
         ctx.arc(pt.sx, pt.sy, dotSize, 0, Math.PI * 2);

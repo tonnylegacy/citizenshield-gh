@@ -33,8 +33,11 @@
       this.speechLang = 'en-GH';
       this.fallbackSpeechLang = 'en-US';
 
-      // Whisper TTS
+      // Whisper TTS & Natural Neural Audio Engine
       this.speechSynthesis = window.speechSynthesis || null;
+      this.voicePersona = (typeof localStorage !== 'undefined' && localStorage.getItem('cs_gh_voice_persona')) || 'ezinne';
+      this.neuralAudio = null;
+      this.isSpeaking = false;
       this.lastWhisperTime = 0;
 
       // Attached Preview Video Element (for 'video-open' mode)
@@ -45,6 +48,8 @@
         transcript: [],
         stateChange: [],
         chunkRecorded: [],
+        speechStart: [],
+        speechEnd: [],
         error: []
       };
 
@@ -504,43 +509,149 @@
     }
 
     /**
-     * Earbud Whisper TTS
-     * Speaks low-profile tactical instructions into the user's earpiece
+     * Stop any active neural or browser speech output immediately
+     */
+    stopSpeech() {
+      if (this.neuralAudio) {
+        try {
+          this.neuralAudio.pause();
+          this.neuralAudio.src = '';
+        } catch (e) { /* ignore */ }
+        this.neuralAudio = null;
+      }
+      if (this.speechSynthesis) {
+        try {
+          this.speechSynthesis.cancel();
+        } catch (e) { /* ignore */ }
+      }
+      if (this.isSpeaking) {
+        this.isSpeaking = false;
+        this.emit('speechEnd', { persona: this.voicePersona });
+      }
+    }
+
+    /**
+     * Set Natural Neural Voice Persona ('ezinne' | 'abeo' | 'sonia' | 'andrew')
+     * @param {string} persona
+     */
+    setVoicePersona(persona) {
+      const valid = ['ezinne', 'abeo', 'sonia', 'andrew'];
+      this.voicePersona = valid.includes(persona) ? persona : 'ezinne';
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('cs_gh_voice_persona', this.voicePersona);
+      }
+    }
+
+    /**
+     * Get active voice persona
+     */
+    getVoicePersona() {
+      return this.voicePersona || 'ezinne';
+    }
+
+    /**
+     * Earbud Whisper & Natural Human Counsel Voice
+     * Streams 24kHz Natural Neural Speech (West African Ezinne/Abeo or British Sonia)
+     * with automatic offline fallback to Web Speech Synthesis if network is severed.
      * @param {string} text Text to speak
      * @param {boolean} force If true, speaks even if earbudMode is false
      */
     whisper(text, force = false) {
       if (!this.earbudMode && !force) return;
-      if (!this.speechSynthesis) return;
+      if (!text || !text.trim()) return;
 
-      // Throttle whispers to prevent speech overlap queue
+      // Throttle automatic whispers to prevent speech overlap queue
       const now = Date.now();
       if (now - this.lastWhisperTime < 1800 && !force) {
         return;
       }
       this.lastWhisperTime = now;
 
+      // Cancel any ongoing speech first
+      this.stopSpeech();
+
+      const cleanText = text.trim();
+      const persona = this.voicePersona || 'ezinne';
+
+      // Attempt Natural Neural Voice Stream first when online
+      if (typeof Audio !== 'undefined' && navigator.onLine !== false) {
+        try {
+          const ttsUrl = `/api/tts?voice=${encodeURIComponent(persona)}&text=${encodeURIComponent(cleanText)}`;
+          const audio = new Audio(ttsUrl);
+          audio.preload = 'auto';
+          audio.volume = 0.95;
+          this.neuralAudio = audio;
+
+          audio.onplaying = () => {
+            this.isSpeaking = true;
+            this.emit('speechStart', { persona, engine: 'neural', text: cleanText });
+          };
+
+          audio.onended = () => {
+            this.isSpeaking = false;
+            this.neuralAudio = null;
+            this.emit('speechEnd', { persona, engine: 'neural' });
+          };
+
+          audio.onerror = () => {
+            this.neuralAudio = null;
+            this._fallbackBrowserSpeech(cleanText);
+          };
+
+          const playPromise = audio.play();
+          if (playPromise && typeof playPromise.catch === 'function') {
+            playPromise.catch(() => {
+              this.neuralAudio = null;
+              this._fallbackBrowserSpeech(cleanText);
+            });
+          }
+          return;
+        } catch (err) {
+          console.warn('[MediaEngine] Neural TTS fallback triggered:', err);
+        }
+      }
+
+      this._fallbackBrowserSpeech(cleanText);
+    }
+
+    /**
+     * Offline Fallback Speech Synthesis when device has zero connectivity
+     * @param {string} text
+     */
+    _fallbackBrowserSpeech(text) {
+      if (!this.speechSynthesis) return;
       try {
-        // Cancel any pending speech
         this.speechSynthesis.cancel();
-
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 1.05; // Calm, low-profile pace
-        utterance.pitch = 0.95; // Subtle and measured
-        utterance.volume = 0.85; // Low-profile volume
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        utterance.volume = 0.9;
 
-        // Try to pick an English voice
         const voices = this.speechSynthesis.getVoices();
         if (voices && voices.length > 0) {
-          const englishVoice = voices.find(v => v.lang.startsWith('en') && !v.name.includes('Google'));
-          if (englishVoice) {
-            utterance.voice = englishVoice;
-          }
+          const preferred =
+            voices.find(v => v.name.includes('Natural') || v.name.includes('Neural')) ||
+            voices.find(v => v.lang.startsWith('en-GB') && (v.name.includes('Hazel') || v.name.includes('Sonia') || v.name.includes('Susan'))) ||
+            voices.find(v => v.lang.startsWith('en'));
+          if (preferred) utterance.voice = preferred;
         }
+
+        utterance.onstart = () => {
+          this.isSpeaking = true;
+          this.emit('speechStart', { persona: 'offline-fallback', engine: 'browser', text });
+        };
+        utterance.onend = () => {
+          this.isSpeaking = false;
+          this.emit('speechEnd', { persona: 'offline-fallback', engine: 'browser' });
+        };
+        utterance.onerror = () => {
+          this.isSpeaking = false;
+          this.emit('speechEnd', { persona: 'offline-fallback', engine: 'browser' });
+        };
 
         this.speechSynthesis.speak(utterance);
       } catch (err) {
-        console.warn('[MediaEngine] Whisper TTS error:', err);
+        console.warn('[MediaEngine] Browser fallback TTS error:', err);
       }
     }
 

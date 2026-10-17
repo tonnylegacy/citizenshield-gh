@@ -216,6 +216,20 @@
             <!-- Active Legal Counsel & Editorial Script Card -->
             <div class="legal-card-stack" id="legal-card-stack">
               <article class="legal-copilot-card status-safe tilt-card" id="active-legal-card">
+                <!-- Instant 1-Tap Encounter Topic Bar (Zero Scrolling Needed Under Stress) -->
+                <div class="quick-situation-bar" role="toolbar" aria-label="Quick Encounter Situations">
+                  <span class="quick-situation-label">Instant Topic:</span>
+                  <div class="quick-situation-pills" id="quick-situation-pills">
+                    <button type="button" class="situation-pill active" data-quick-utterance="Give me your phone and unlock your WhatsApp right now">Phone Search</button>
+                    <button type="button" class="situation-pill" data-quick-utterance="Give me your car keys, I am impounding your car for expired insurance">Car Keys</button>
+                    <button type="button" class="situation-pill" data-quick-utterance="Pay the spot fine in cash right here or we go to the station">Spot Fine</button>
+                    <button type="button" class="situation-pill" data-quick-utterance="Show me your driver's license right now or you are under arrest">24h License</button>
+                    <button type="button" class="situation-pill" data-quick-utterance="Look at your dreadlocks and hair, you look like a fraud boy">Dreadlocks</button>
+                    <button type="button" class="situation-pill" data-quick-utterance="Why are you smoking shisha here, empty your pockets">Smoking</button>
+                    <button type="button" class="situation-pill situation-pill-danger" data-quick-utterance="You are under arrest, get in the police vehicle right now">Arrest</button>
+                  </div>
+                </div>
+
                 <div class="legal-card-header">
                   <div class="statute-pill-group">
                     <span class="statute-citation-pill" id="legal-card-statute">1992 Constitution • Art. 14 & 18</span>
@@ -224,21 +238,37 @@
                 </div>
 
                 <!-- Warm Ivory Apple-Wallet-Style Editorial Spoken Script Pass -->
-                <div class="calm-quote-box">
+                <div class="calm-quote-box" id="calm-quote-box">
                   <div class="quote-pass-header">
-                    <span class="quote-eyebrow">What to Say Calmly</span>
-                    <button type="button" class="btn-whisper-speech" id="btn-whisper-active-script" title="Speak this script in earbud">
+                    <div class="quote-eyebrow-group">
+                      <span class="quote-eyebrow">What to Say Calmly</span>
+                      <span class="neural-voice-badge" id="neural-voice-badge" title="Powered by 24kHz Natural Neural Speech">
+                        <span class="eq-bars" id="neural-eq-bars" aria-hidden="true">
+                          <i></i><i></i><i></i><i></i>
+                        </span>
+                        <span id="neural-voice-status-text">Natural Human Voice</span>
+                      </span>
+                    </div>
+                    <button type="button" class="btn-whisper-speech" id="btn-whisper-active-script" title="Speak this script naturally">
                       <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
                         <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
                         <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
                       </svg>
-                      <span>Whisper to Earbud</span>
+                      <span id="btn-whisper-label">Speak Naturally</span>
                     </button>
                   </div>
                   <blockquote class="calm-quote-text" id="legal-card-script">
                     “Officer, good day. I respect your work. Under Article 18(2) of the 1992 Constitution and the High Court ruling in Edmund Addo v. IGP, my phone is private correspondence and cannot be searched without a judicial warrant.”
                   </blockquote>
+                  <div class="quote-voice-footer">
+                    <span class="voice-persona-label">Counsel Voice:</span>
+                    <div class="voice-persona-pills" id="voice-persona-pills" role="radiogroup" aria-label="Natural Voice Persona">
+                      <button type="button" class="voice-pill active" data-voice-persona="ezinne" title="Natural West African Female Counsel">Ezinne • West African</button>
+                      <button type="button" class="voice-pill" data-voice-persona="abeo" title="Natural West African Male Counsel">Abeo • West African</button>
+                      <button type="button" class="voice-pill" data-voice-persona="sonia" title="Natural Commonwealth British Barrister">Sonia • Barrister</button>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="legal-card-body">

@@ -3,7 +3,7 @@
  * Ensures 100% offline functionality during police encounters even when mobile data is cut or unavailable.
  */
 
-const CACHE_NAME = 'citizenshield-ghana-v2.0.0';
+const CACHE_NAME = 'citizenshield-ghana-v2.1.0';
 const STATIC_ASSETS = [
   './',
   './index.html',

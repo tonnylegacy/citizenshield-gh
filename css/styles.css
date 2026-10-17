@@ -279,14 +279,20 @@ html, body {
 
 .bento-shield-layout {
   display: grid;
-  grid-template-columns: 400px 1fr;
+  grid-template-columns: 400px minmax(0, 1fr);
   gap: 22px;
   align-items: start;
+  max-width: 100%;
+}
+
+.bento-shield-layout > * {
+  min-width: 0;
+  max-width: 100%;
 }
 
 @media (max-width: 920px) {
   .bento-shield-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -325,6 +331,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   margin-bottom: 12px;
 }
 
@@ -392,7 +399,10 @@ html, body {
 
 .orb-center-overlay {
   position: absolute;
-  inset: 0;
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(9, 9, 12, 0.86) 0%, rgba(9, 9, 12, 0.54) 62%, rgba(9, 9, 12, 0) 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -403,20 +413,21 @@ html, body {
 
 .orb-timer-readout {
   font-family: var(--font-mono);
-  font-size: 26px;
+  font-size: 27px;
   font-weight: 600;
   letter-spacing: -0.03em;
   color: #FFFFFF;
-  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.85);
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.95);
 }
 
 .orb-tap-hint {
-  font-size: 10.5px;
-  font-weight: 600;
+  font-size: 10px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.55);
-  margin-top: 2px;
+  letter-spacing: 0.09em;
+  color: rgba(229, 184, 105, 0.9);
+  margin-top: 3px;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.95);
 }
 
 /* Video Preview Box */
@@ -564,7 +575,7 @@ html, body {
 /* Tactile Switches */
 .deck-switches {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 8px;
   margin-bottom: 16px;
 }
@@ -816,6 +827,67 @@ html, body {
   background: rgba(255, 255, 255, 0.04);
 }
 
+/* Instant 1-Tap Encounter Topic Bar */
+.quick-situation-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.quick-situation-label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.quick-situation-pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.situation-pill {
+  padding: 5px 11px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.18s var(--ease-out-expo);
+}
+
+.situation-pill:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.situation-pill.active {
+  background: var(--champagne-gold);
+  color: #09090B;
+  border-color: var(--champagne-gold);
+  box-shadow: 0 4px 14px rgba(229, 184, 105, 0.28);
+}
+
+.situation-pill.situation-pill-danger.active {
+  background: var(--critical-crimson);
+  color: #FFFFFF;
+  border-color: var(--critical-crimson);
+}
+
 /* Warm Ivory Apple-Wallet-Style Editorial Spoken Script Pass */
 .calm-quote-box {
   background: var(--ivory-pass-bg);
@@ -825,13 +897,27 @@ html, body {
   box-shadow: var(--shadow-ivory);
   margin-bottom: 18px;
   position: relative;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.calm-quote-box.is-speaking {
+  box-shadow: 0 20px 48px -10px rgba(16, 185, 129, 0.35), 0 0 0 2px #10B981;
 }
 
 .quote-pass-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.quote-eyebrow-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .quote-eyebrow {
@@ -843,11 +929,60 @@ html, body {
   color: var(--ivory-pass-muted);
 }
 
+.neural-voice-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  color: #065F46;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.neural-voice-badge.speaking {
+  background: #065F46;
+  color: #ECFDF5;
+  border-color: #047857;
+}
+
+.eq-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 10px;
+}
+
+.eq-bars i {
+  display: block;
+  width: 2px;
+  height: 4px;
+  border-radius: 1px;
+  background: currentColor;
+  transition: height 0.2s ease;
+}
+
+.neural-voice-badge.speaking .eq-bars i {
+  animation: eqDance 0.65s ease-in-out infinite alternate;
+}
+
+.neural-voice-badge.speaking .eq-bars i:nth-child(2) { animation-delay: 0.15s; }
+.neural-voice-badge.speaking .eq-bars i:nth-child(3) { animation-delay: 0.3s; }
+.neural-voice-badge.speaking .eq-bars i:nth-child(4) { animation-delay: 0.45s; }
+
+@keyframes eqDance {
+  0% { height: 3px; }
+  100% { height: 10px; }
+}
+
 .btn-whisper-speech {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 13px;
+  padding: 7px 14px;
   border-radius: var(--radius-pill);
   background: #141417;
   color: #F5F5F7;
@@ -864,13 +999,68 @@ html, body {
   transform: scale(1.03);
 }
 
+.btn-whisper-speech.speaking {
+  background: #059669;
+  color: #FFFFFF;
+}
+
 .calm-quote-text {
   font-family: var(--font-serif);
-  font-size: 23px;
-  line-height: 1.35;
+  font-size: 22.5px;
+  line-height: 1.36;
   color: var(--ivory-pass-ink);
   font-weight: 400;
   letter-spacing: -0.01em;
+  margin-bottom: 14px;
+}
+
+.quote-voice-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(17, 17, 19, 0.1);
+}
+
+.voice-persona-label {
+  font-family: var(--font-display);
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ivory-pass-muted);
+}
+
+.voice-persona-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.voice-pill {
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(17, 17, 19, 0.15);
+  background: rgba(17, 17, 19, 0.04);
+  color: #3F3F46;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.voice-pill:hover {
+  background: rgba(17, 17, 19, 0.09);
+  color: #111113;
+}
+
+.voice-pill.active {
+  background: #141417;
+  color: #F4EFE6;
+  border-color: #141417;
 }
 
 /* Two-Column Legal Right & Officer Boundary inside Card */
@@ -2267,3 +2457,99 @@ html, body {
   font-weight: 500;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65);
 }
+
+/* ==========================================================================
+   MOBILE VIEWPORT PERFECTION (393px iPhone / Android Zero-Overflow Polish)
+   ========================================================================== */
+@media (max-width: 600px) {
+  .app-shell {
+    padding: 0 12px 115px;
+  }
+
+  .top-header {
+    padding: 9px 12px;
+    gap: 8px;
+  }
+
+  .brand-block {
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .brand-emblem {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+  }
+
+  .brand-title {
+    font-size: 14.5px;
+  }
+
+  .brand-subtitle {
+    font-size: 10.5px;
+  }
+
+  .header-actions {
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .header-btn {
+    padding: 6px 10px;
+    font-size: 11.5px;
+    gap: 5px;
+  }
+
+  .shield-deck,
+  .legal-copilot-card,
+  .watermark-section,
+  .transcript-section {
+    padding: 16px;
+    border-radius: 20px;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .deck-switches {
+    grid-template-columns: 1fr;
+  }
+
+  .telemetry-row-primary,
+  .telemetry-row-sub,
+  .transcript-header,
+  .simulator-header-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .calm-quote-box {
+    padding: 16px;
+  }
+
+  .calm-quote-text {
+    font-size: 19px;
+    line-height: 1.38;
+  }
+
+  .badge-quick-input,
+  .custom-simulation-form {
+    flex-direction: column;
+  }
+
+  .btn-pin-badge,
+  .btn-sim-send {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .scenario-chips-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .section-display-title {
+    font-size: 28px;
+  }
+}
+
