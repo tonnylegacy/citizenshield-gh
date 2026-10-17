@@ -1,0 +1,57 @@
+{
+  "name": "Pocket Barrister Ghana — Citizen Encounter Guardian",
+  "short_name": "PocketBarrister",
+  "description": "Real-time AI legal shield for police encounters in Ghana. Authoritative 1992 Constitutional citations, respectful Ghanaian spoken scripts, tamper-evident recording, and emergency PPSB SOS dispatch.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#050B14",
+  "theme_color": "#064E3B",
+  "categories": ["legal", "safety", "utilities", "social"],
+  "lang": "en-GH",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "./assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./assets/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Start Safe Encounter",
+      "short_name": "Encounter",
+      "description": "Instantly start voice witness & legal analysis mode",
+      "url": "./index.html?mode=encounter",
+      "icons": [{ "src": "./assets/icons/shield.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Emergency PPSB SOS",
+      "short_name": "SOS Alert",
+      "description": "Send GPS coordinates & audio hash to trusted contacts & PPSB",
+      "url": "./index.html?mode=sos",
+      "icons": [{ "src": "./assets/icons/sos.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Ghana Law Library",
+      "short_name": "Laws",
+      "description": "Search 19 verified Ghanaian statutes & case laws",
+      "url": "./index.html?mode=laws",
+      "icons": [{ "src": "./assets/icons/book.png", "sizes": "96x96" }]
+    }
+  ]
+}

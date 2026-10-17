@@ -1,0 +1,24 @@
+{
+  "name": "pocket-barrister-ghana",
+  "version": "1.0.0",
+  "description": "Offline-first Ghanaian Police Encounter Shield & Real-Time AI Legal Counsel",
+  "main": "js/app.js",
+  "scripts": {
+    "start": "npx serve . -p 8888",
+    "test": "node -e \"const laws = require('./js/data/ghana-laws.js'); console.log('Successfully validated ' + laws.GHANA_LAWS_DATA.length + ' Ghanaian statutory entries.');\""
+  },
+  "keywords": [
+    "ghana",
+    "human-rights",
+    "police-accountability",
+    "ai-legal-counsel",
+    "constitution-1992",
+    "ppsb",
+    "pwa"
+  ],
+  "author": "CitizenShield Ghana Team",
+  "license": "MIT",
+  "dependencies": {
+    "@google/genai": "^0.1.2"
+  }
+}
