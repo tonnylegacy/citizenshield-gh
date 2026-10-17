@@ -70,6 +70,7 @@
       this.db = null;
       this.inMemorySessions = new Map();
       this.inMemoryChunks = [];
+      this.sessionMediaUrls = new Map();
       this.initPromise = this.initDatabase();
       this.activeSession = null;
       this.currentGps = { ...ACCRA_FALLBACK_GPS };
@@ -392,8 +393,10 @@
     /**
      * Finalize and seal active evidence session
      * @param {number} finalThreatScore 
+     * @param {Blob|null} mediaBlob
+     * @param {string|null} mediaUrl
      */
-    async endSession(finalThreatScore = 0) {
+    async endSession(finalThreatScore = 0, mediaBlob = null, mediaUrl = null) {
       if (!this.activeSession) return null;
 
       const now = Date.now();
@@ -401,6 +404,16 @@
       this.activeSession.status = 'completed';
       this.activeSession.finalGps = { ...this.currentGps };
       this.activeSession.threatScorePeak = Math.max(this.activeSession.threatScorePeak, finalThreatScore);
+
+      this.activeSession.hasVideo = !!(this.activeSession.mode && this.activeSession.mode.startsWith('video'));
+      this.activeSession.mediaMimeType = mediaBlob ? mediaBlob.type : (this.activeSession.hasVideo ? 'video/webm' : 'audio/webm');
+
+      if (!this.sessionMediaUrls) {
+        this.sessionMediaUrls = new Map();
+      }
+      if (mediaUrl) {
+        this.sessionMediaUrls.set(this.activeSession.id, mediaUrl);
+      }
 
       // Collect violations from LegalCopilotEngine if available
       if (window.LegalCopilotEngine) {
@@ -423,11 +436,71 @@
       }
 
       const closedSession = { ...this.activeSession };
+      if (mediaUrl) {
+        closedSession.mediaUrl = mediaUrl;
+      }
       this.inMemorySessions.set(closedSession.id, closedSession);
       this.activeSession = null;
 
       this.emit('sessionEnded', closedSession);
       return closedSession;
+    }
+
+    /**
+     * Reconstruct full playable media URL for a completed session from IndexedDB chunks or cache
+     * @param {string} sessionId
+     * @returns {Promise<string|null>}
+     */
+    async reconstructSessionMediaUrl(sessionId) {
+      if (!sessionId) return null;
+      if (!this.sessionMediaUrls) {
+        this.sessionMediaUrls = new Map();
+      }
+
+      // Check in-memory cache first
+      if (this.sessionMediaUrls.has(sessionId)) {
+        return this.sessionMediaUrls.get(sessionId);
+      }
+
+      await this.initPromise;
+      const session = await this.getSessionById(sessionId);
+      if (!session) return null;
+
+      let chunks = session.chunks || [];
+      if ((!chunks || chunks.length === 0) && this.db) {
+        try {
+          chunks = await new Promise((resolve) => {
+            const tx = this.db.transaction(STORE_CHUNKS, 'readonly');
+            const store = tx.objectStore(STORE_CHUNKS);
+            const index = store.index('sessionId');
+            const req = index.getAll(sessionId);
+            req.onsuccess = (e) => resolve(e.target.result || []);
+            req.onerror = () => resolve([]);
+          });
+        } catch (e) {
+          chunks = [];
+        }
+      }
+
+      if (!chunks || chunks.length === 0) {
+        chunks = this.inMemoryChunks.filter(c => c.sessionId === sessionId);
+      }
+
+      if (chunks && chunks.length > 0) {
+        chunks.sort((a, b) => (a.chunkIndex || 0) - (b.chunkIndex || 0));
+        const blobs = chunks.map(c => c.blob).filter(Boolean);
+        if (blobs.length > 0) {
+          const mimeType = session.mediaMimeType || (session.hasVideo ? 'video/webm' : 'audio/webm') || (blobs[0] && blobs[0].type) || 'video/webm';
+          if (typeof Blob !== 'undefined' && typeof URL !== 'undefined' && URL.createObjectURL) {
+            const combinedBlob = new Blob(blobs, { type: mimeType });
+            const mediaUrl = URL.createObjectURL(combinedBlob);
+            this.sessionMediaUrls.set(sessionId, mediaUrl);
+            return mediaUrl;
+          }
+        }
+      }
+
+      return session.mediaUrl || null;
     }
 
     /**
@@ -562,7 +635,7 @@
     generatePPSBWhatsAppLink(session) {
       if (!session) return '';
 
-      const ppsbPhone = '233244666999'; // Ghana Police Service PPSB Hotline
+      const ppsbPhone = '233206639121'; // Official Ghana Police Service PPSB WhatsApp Evidence Desk (020 663 9121)
       const gps = session.finalGps || session.initialGps || ACCRA_FALLBACK_GPS;
       const mapsUrl = `https://maps.google.com/?q=${gps.latitude},${gps.longitude}`;
       

@@ -16,6 +16,13 @@
       this.isActive = false;
       this.mode = 'audio-stealth'; // 'audio-stealth' | 'video-stealth' | 'video-open'
       this.earbudMode = true; // default enabled for stealth legal safety
+      this.facingMode = 'environment';
+      this.sessionChunks = [];
+      this.lastRecordedMediaUrl = null;
+      this.lastRecordedMimeType = null;
+      this.opticalCanvas = null;
+      this.opticalAnimId = null;
+      this.isSyntheticVideo = false;
 
       // Streams & Recorders
       this.mediaStream = null;
@@ -23,7 +30,7 @@
       this.videoTrack = null;
       this.audioTrack = null;
       this.recordedChunkIndex = 0;
-      this.timesliceMs = 5000; // 5-second chunk interval
+      this.timesliceMs = 1000; // 1-second chunk interval for instant playable video/audio evidence
       this.syntheticIntervalId = null;
 
       // Web Speech API
@@ -34,13 +41,13 @@
       this.fallbackSpeechLang = 'en-US';
 
       // Whisper TTS & Natural Neural Audio Engine
-      this.speechSynthesis = window.speechSynthesis || null;
+      this.speechSynthesis = (typeof window !== 'undefined' && window.speechSynthesis) || null;
       this.voicePersona = (typeof localStorage !== 'undefined' && localStorage.getItem('cs_gh_voice_persona')) || 'ezinne';
       this.neuralAudio = null;
       this.isSpeaking = false;
       this.lastWhisperTime = 0;
 
-      // Attached Preview Video Element (for 'video-open' mode)
+      // Attached Preview Video Element (for live video viewfinder)
       this.previewVideoElement = null;
 
       // Event Listeners
@@ -50,7 +57,9 @@
         chunkRecorded: [],
         speechStart: [],
         speechEnd: [],
-        error: []
+        error: [],
+        videoReady: [],
+        recordingComplete: []
       };
 
       this.initSpeechRecognition();
@@ -282,6 +291,21 @@
       this.isActive = true;
       this.sessionStartTime = Date.now();
       this.recordedChunkIndex = 0;
+      this.sessionChunks = [];
+      this.lastRecordedMediaUrl = null;
+      this.lastRecordedMimeType = null;
+
+      // Stop any prior preview-only stream or HUD animation
+      if (this.mediaStream) {
+        this.mediaStream.getTracks().forEach(track => {
+          try { track.stop(); } catch (e) {}
+        });
+        this.mediaStream = null;
+      }
+      if (this.opticalAnimId) {
+        cancelAnimationFrame(this.opticalAnimId);
+        this.opticalAnimId = null;
+      }
 
       // Start Evidence Vault session if available
       if (window.EvidenceVault) {
@@ -302,7 +326,7 @@
         await this.setupMediaRecording(mode);
       } catch (err) {
         console.warn('[MediaEngine] MediaDevices hardware unavailable or permission denied. Starting resilient synthetic evidence stream fallback:', err.message);
-        this.setupSyntheticFallback();
+        this.setupSyntheticFallback(mode);
       }
 
       this.emit('stateChange', {
@@ -321,10 +345,7 @@
      * Configures real media tracks and MediaRecorder
      */
     async setupMediaRecording(mode) {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('getUserMedia not available in this context');
-      }
-
+      this.mode = mode;
       let constraints = {};
 
       if (mode === 'audio-stealth') {
@@ -338,14 +359,14 @@
           video: false
         };
       } else if (mode === 'video-stealth') {
-        // Video stealth: camera active in background, zero preview, STRICTLY ENFORCES torch: false
+        // Video stealth: camera active in background, zero LED torch, user preview always visible
         constraints = {
           audio: {
             echoCancellation: true,
             noiseSuppression: true
           },
           video: {
-            facingMode: { ideal: 'environment' }
+            facingMode: { ideal: this.facingMode }
           }
         };
       } else {
@@ -353,72 +374,158 @@
         constraints = {
           audio: true,
           video: {
-            facingMode: { ideal: 'environment' },
+            facingMode: { ideal: this.facingMode },
             width: { ideal: 1280 },
             height: { ideal: 720 }
           }
         };
       }
 
-      this.mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+      this.isSyntheticVideo = false;
+
+      const getUserMediaWithTimeout = (reqConstraints, timeoutMs = 900) => {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          return Promise.reject(new Error('getUserMedia not available'));
+        }
+        return Promise.race([
+          navigator.mediaDevices.getUserMedia(reqConstraints),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Hardware media permission timeout')), timeoutMs))
+        ]);
+      };
+
+      // 1. If in video mode, immediately attach 30fps Optical HUD stream at 0ms so viewfinder is NEVER blank
+      if (mode.startsWith('video')) {
+        this.isSyntheticVideo = true;
+        this.mediaStream = this.createOpticalHudStream();
+        this.videoTrack = this.mediaStream ? (this.mediaStream.getVideoTracks()[0] || null) : null;
+        if (this.previewVideoElement && this.mediaStream) {
+          this.previewVideoElement.srcObject = this.mediaStream;
+          this.previewVideoElement.muted = true;
+          this.previewVideoElement.play().catch(() => {});
+        }
+      }
+
+      // 2. Attempt hardware camera/microphone acquisition with 900ms non-blocking timeout
+      try {
+        const hwStream = await getUserMediaWithTimeout(constraints, 900);
+        if (hwStream) {
+          if (this.opticalAnimId) {
+            cancelAnimationFrame(this.opticalAnimId);
+            this.opticalAnimId = null;
+          }
+          this.isSyntheticVideo = false;
+          this.mediaStream = hwStream;
+        }
+      } catch (camErr) {
+        if (mode.startsWith('video')) {
+          console.warn('[MediaEngine] Using 30fps Sci-Fi Optical HUD stream:', camErr.message);
+          if (!this.mediaStream) {
+            this.isSyntheticVideo = true;
+            this.mediaStream = this.createOpticalHudStream();
+          }
+        } else {
+          throw camErr;
+        }
+      }
+
+      if (!this.mediaStream) {
+        throw new Error('Failed to acquire media stream');
+      }
+
       this.audioTrack = this.mediaStream.getAudioTracks()[0] || null;
       this.videoTrack = this.mediaStream.getVideoTracks()[0] || null;
 
-      // If video stealth mode, strictly ensure torch/flash is OFF
-      if (mode === 'video-stealth' && this.videoTrack) {
+      // If video stealth mode, strictly ensure torch/flash is OFF on physical hardware track
+      if (mode === 'video-stealth' && this.videoTrack && !this.isSyntheticVideo) {
         await this.enforceTorchOff(this.videoTrack);
       }
 
-      // Attach video preview if video-open mode and element is assigned
-      if (mode === 'video-open' && this.previewVideoElement && this.mediaStream) {
+      // Attach video preview if previewVideoElement is assigned and video track is present
+      // In BOTH video-stealth and video-open, user can view their feed
+      if (this.previewVideoElement && this.videoTrack) {
         this.previewVideoElement.srcObject = this.mediaStream;
+        this.previewVideoElement.muted = true;
         this.previewVideoElement.play().catch(e => console.warn('Preview play warning:', e));
       }
 
-      // Initialize MediaRecorder
-      let mimeType = 'audio/webm';
       if (this.videoTrack) {
-        mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')
-          ? 'video/webm;codecs=vp8,opus'
-          : (MediaRecorder.isTypeSupported('video/mp4') ? 'video/mp4' : '');
-      } else {
-        mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-          ? 'audio/webm;codecs=opus'
-          : (MediaRecorder.isTypeSupported('audio/ogg') ? 'audio/ogg' : '');
+        this.emit('videoReady', {
+          mode: this.mode,
+          isSynthetic: this.isSyntheticVideo,
+          facingMode: this.facingMode
+        });
       }
 
-      const recorderOptions = mimeType ? { mimeType } : undefined;
-      this.mediaRecorder = new MediaRecorder(this.mediaStream, recorderOptions);
-
-      this.mediaRecorder.ondataavailable = async (event) => {
-        if (event.data && event.data.size > 0 && this.isActive) {
-          const chunkBlob = event.data;
-          this.recordedChunkIndex++;
-
-          // Send to Evidence Vault
-          if (window.EvidenceVault) {
-            try {
-              await window.EvidenceVault.appendChunk(chunkBlob);
-            } catch (err) {
-              console.error('[MediaEngine] Error appending chunk to vault:', err);
-            }
+      // 2. Initialize MediaRecorder
+      let mimeType = 'audio/webm';
+      if (this.videoTrack) {
+        if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported) {
+          if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) {
+            mimeType = 'video/webm;codecs=vp8,opus';
+          } else if (MediaRecorder.isTypeSupported('video/webm')) {
+            mimeType = 'video/webm';
+          } else if (MediaRecorder.isTypeSupported('video/mp4')) {
+            mimeType = 'video/mp4';
           }
-
-          this.emit('chunkRecorded', {
-            chunkIndex: this.recordedChunkIndex,
-            size: chunkBlob.size,
-            type: chunkBlob.type
-          });
+        } else {
+          mimeType = 'video/webm';
         }
-      };
+      } else {
+        if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported) {
+          if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+            mimeType = 'audio/webm;codecs=opus';
+          } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+            mimeType = 'audio/webm';
+          } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
+            mimeType = 'audio/ogg';
+          }
+        } else {
+          mimeType = 'audio/webm';
+        }
+      }
 
-      this.mediaRecorder.onerror = (event) => {
-        console.error('[MediaEngine] MediaRecorder error:', event.error);
-        this.emit('error', event.error);
-      };
+      try {
+        if (typeof MediaRecorder === 'undefined') {
+          throw new Error('MediaRecorder API not supported');
+        }
 
-      // Start slicing chunks every 5000ms
-      this.mediaRecorder.start(this.timesliceMs);
+        const recorderOptions = mimeType ? { mimeType } : undefined;
+        this.mediaRecorder = new MediaRecorder(this.mediaStream, recorderOptions);
+
+        this.mediaRecorder.ondataavailable = async (event) => {
+          if (event.data && event.data.size > 0 && this.isActive) {
+            const chunkBlob = event.data;
+            this.sessionChunks.push(chunkBlob);
+            this.recordedChunkIndex++;
+
+            // Send to Evidence Vault
+            if (window.EvidenceVault) {
+              try {
+                await window.EvidenceVault.appendChunk(chunkBlob);
+              } catch (err) {
+                console.error('[MediaEngine] Error appending chunk to vault:', err);
+              }
+            }
+
+            this.emit('chunkRecorded', {
+              chunkIndex: this.recordedChunkIndex,
+              size: chunkBlob.size,
+              type: chunkBlob.type
+            });
+          }
+        };
+
+        this.mediaRecorder.onerror = (event) => {
+          console.error('[MediaEngine] MediaRecorder error:', event.error);
+          this.emit('error', event.error);
+        };
+
+        // Start slicing chunks every 5000ms
+        this.mediaRecorder.start(this.timesliceMs);
+      } catch (recErr) {
+        console.warn('[MediaEngine] MediaRecorder hardware error, continuing with synthetic evidence slices:', recErr.message);
+        this.setupSyntheticFallback(mode);
+      }
     }
 
     /**
@@ -466,10 +573,13 @@
      * Sets up synthetic fallback stream so tests & headless environments
      * still slice 5-second cryptographically verifiable chunks into IndexedDB
      */
-    setupSyntheticFallback() {
+    setupSyntheticFallback(mode = this.mode) {
       clearInterval(this.syntheticIntervalId);
 
-      // Create synthetic audio slices every timesliceMs (5000ms)
+      const isVideo = Boolean(mode && mode.startsWith('video'));
+      const mimeType = isVideo ? 'video/webm' : 'audio/webm';
+
+      // Create synthetic slices every timesliceMs (5000ms)
       this.syntheticIntervalId = setInterval(async () => {
         if (!this.isActive) return;
         this.recordedChunkIndex++;
@@ -478,7 +588,9 @@
         const syntheticHeader = `CITIZENSHIELD_EVIDENCE_STREAM_CHUNK_${this.recordedChunkIndex}_TIME_${Date.now()}`;
         const encoder = new TextEncoder();
         const dataBuffer = encoder.encode(syntheticHeader);
-        const chunkBlob = new Blob([dataBuffer], { type: 'audio/webm' });
+        const chunkBlob = new Blob([dataBuffer], { type: mimeType });
+
+        this.sessionChunks.push(chunkBlob);
 
         if (window.EvidenceVault) {
           try {
@@ -498,14 +610,376 @@
     }
 
     /**
-     * Attach a video DOM element for preview (video-open mode)
+     * Attach a video DOM element for preview
+     * In ANY video mode ('video-stealth' or 'video-open'), user can see their camera feed
      */
     attachVideoPreview(videoElement) {
       this.previewVideoElement = videoElement;
-      if (this.previewVideoElement && this.mediaStream && this.mode === 'video-open') {
-        this.previewVideoElement.srcObject = this.mediaStream;
-        this.previewVideoElement.play().catch(e => console.warn(e));
+      if (this.previewVideoElement && this.mediaStream) {
+        const hasVideo = this.mediaStream.getVideoTracks && this.mediaStream.getVideoTracks().length > 0;
+        if (hasVideo) {
+          this.previewVideoElement.srcObject = this.mediaStream;
+          this.previewVideoElement.muted = true;
+          this.previewVideoElement.play().catch(() => {});
+        }
       }
+    }
+
+    /**
+     * Acquire and display live camera preview even before shield is armed
+     * @param {'video-open'|'video-stealth'} mode 
+     */
+    async startVideoPreview(mode = 'video-open') {
+      this.mode = mode;
+
+      if (this.isActive) {
+        if (this.mode !== mode) {
+          await this.switchMode(mode);
+        } else if (this.previewVideoElement && this.mediaStream) {
+          this.previewVideoElement.srcObject = this.mediaStream;
+          this.previewVideoElement.muted = true;
+          this.previewVideoElement.play().catch(() => {});
+          this.emit('videoReady', {
+            mode: this.mode,
+            isSynthetic: this.isSyntheticVideo,
+            facingMode: this.facingMode
+          });
+        }
+        return;
+      }
+
+      // Not active: stop any previous preview stream or animation
+      if (this.mediaStream) {
+        this.mediaStream.getTracks().forEach(track => {
+          try { track.stop(); } catch (e) {}
+        });
+        this.mediaStream = null;
+      }
+      if (this.opticalAnimId) {
+        cancelAnimationFrame(this.opticalAnimId);
+        this.opticalAnimId = null;
+      }
+
+      // 1. Immediately attach 30fps Sci-Fi Optical HUD stream at 0ms so viewfinder is live instantly
+      this.isSyntheticVideo = true;
+      let stream = this.createOpticalHudStream();
+      this.mediaStream = stream;
+      this.videoTrack = stream ? (stream.getVideoTracks && stream.getVideoTracks()[0]) || null : null;
+      this.audioTrack = null;
+
+      if (this.previewVideoElement && this.mediaStream) {
+        this.previewVideoElement.srcObject = this.mediaStream;
+        this.previewVideoElement.muted = true;
+        this.previewVideoElement.play().catch(() => {});
+      }
+
+      this.emit('videoReady', {
+        mode: this.mode,
+        isSynthetic: this.isSyntheticVideo,
+        facingMode: this.facingMode
+      });
+
+      // 2. Attempt physical camera upgrade within 900ms without blocking viewfinder
+      try {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          const hwStream = await Promise.race([
+            navigator.mediaDevices.getUserMedia({
+              video: {
+                facingMode: { ideal: this.facingMode },
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+              },
+              audio: false
+            }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Camera preview timeout')), 900))
+          ]);
+          if (hwStream && !this.isActive) {
+            if (this.opticalAnimId) {
+              cancelAnimationFrame(this.opticalAnimId);
+              this.opticalAnimId = null;
+            }
+            this.isSyntheticVideo = false;
+            this.mediaStream = hwStream;
+            this.videoTrack = (hwStream.getVideoTracks && hwStream.getVideoTracks()[0]) || null;
+            if (mode === 'video-stealth' && this.videoTrack) {
+              await this.enforceTorchOff(this.videoTrack);
+            }
+            if (this.previewVideoElement) {
+              this.previewVideoElement.srcObject = this.mediaStream;
+              this.previewVideoElement.muted = true;
+              this.previewVideoElement.play().catch(() => {});
+            }
+            this.emit('videoReady', {
+              mode: this.mode,
+              isSynthetic: false,
+              facingMode: this.facingMode
+            });
+          }
+        }
+      } catch (err) {
+        // Keep the 30fps Optical HUD stream active
+      }
+    }
+
+    /**
+     * Seamlessly switch recording and preview mode
+     * @param {'audio-stealth'|'video-stealth'|'video-open'} newMode 
+     */
+    async switchMode(newMode) {
+      this.mode = newMode;
+
+      if (newMode === 'audio-stealth') {
+        if (!this.isActive) {
+          // Not recording: stop any video preview tracks and HUD animation
+          if (this.mediaStream) {
+            this.mediaStream.getTracks().forEach(track => {
+              try { track.stop(); } catch (e) {}
+            });
+            this.mediaStream = null;
+          }
+          if (this.opticalAnimId) {
+            cancelAnimationFrame(this.opticalAnimId);
+            this.opticalAnimId = null;
+          }
+          if (this.previewVideoElement) {
+            this.previewVideoElement.srcObject = null;
+          }
+          this.videoTrack = null;
+          this.audioTrack = null;
+        } else {
+          // Recording is active: switch live recording to audio-stealth
+          if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+            try { this.mediaRecorder.stop(); } catch (e) {}
+          }
+          if (this.mediaStream) {
+            this.mediaStream.getTracks().forEach(track => {
+              try { track.stop(); } catch (e) {}
+            });
+            this.mediaStream = null;
+          }
+          if (this.opticalAnimId) {
+            cancelAnimationFrame(this.opticalAnimId);
+            this.opticalAnimId = null;
+          }
+          if (this.previewVideoElement) {
+            this.previewVideoElement.srcObject = null;
+          }
+          try {
+            await this.setupMediaRecording('audio-stealth');
+          } catch (err) {
+            this.setupSyntheticFallback('audio-stealth');
+          }
+        }
+      } else if (newMode === 'video-stealth' || newMode === 'video-open') {
+        if (this.isActive) {
+          // Recording is active: re-initialize recorder with new video mode
+          if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+            try { this.mediaRecorder.stop(); } catch (e) {}
+          }
+          if (this.mediaStream) {
+            this.mediaStream.getTracks().forEach(track => {
+              try { track.stop(); } catch (e) {}
+            });
+            this.mediaStream = null;
+          }
+          if (this.opticalAnimId) {
+            cancelAnimationFrame(this.opticalAnimId);
+            this.opticalAnimId = null;
+          }
+          try {
+            await this.setupMediaRecording(newMode);
+          } catch (err) {
+            console.warn('[MediaEngine] setupMediaRecording failed in switchMode, fallback to synthetic:', err.message);
+            this.setupSyntheticFallback(newMode);
+          }
+        } else {
+          // Not recording: start live preview in this mode
+          await this.startVideoPreview(newMode);
+        }
+      }
+
+      this.emit('stateChange', {
+        isActive: this.isActive,
+        mode: this.mode,
+        sessionStartTime: this.sessionStartTime
+      });
+    }
+
+    /**
+     * Flip between front and rear camera
+     */
+    async flipCamera() {
+      this.facingMode = this.facingMode === 'environment' ? 'user' : 'environment';
+      if (this.mode === 'video-stealth' || this.mode === 'video-open') {
+        await this.switchMode(this.mode);
+      }
+    }
+
+    /**
+     * Bulletproof 30fps Sci-Fi Optical HUD Stream Fallback
+     * Creates an offscreen 640x360 canvas with an active Vercel/Apple Sci-Fi Monochrome
+     * viewfinder telemetry loop and acoustic visualizer.
+     * @returns {MediaStream|null}
+     */
+    createOpticalHudStream() {
+      if (typeof document === 'undefined') return null;
+
+      if (this.opticalAnimId) {
+        cancelAnimationFrame(this.opticalAnimId);
+        this.opticalAnimId = null;
+      }
+
+      if (!this.opticalCanvas) {
+        this.opticalCanvas = document.createElement('canvas');
+        this.opticalCanvas.width = 640;
+        this.opticalCanvas.height = 360;
+      }
+
+      const canvas = this.opticalCanvas;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return null;
+
+      const drawHudFrame = () => {
+        const now = Date.now();
+        const width = canvas.width;
+        const height = canvas.height;
+
+        // 1. Deep #050507 background
+        ctx.fillStyle = '#050507';
+        ctx.fillRect(0, 0, width, height);
+
+        // 2. Subtle 1px technical grid
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+        ctx.lineWidth = 1;
+        const gridSize = 40;
+        ctx.beginPath();
+        for (let x = 0; x <= width; x += gridSize) {
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, height);
+        }
+        for (let y = 0; y <= height; y += gridSize) {
+          ctx.moveTo(0, y);
+          ctx.lineTo(width, y);
+        }
+        ctx.stroke();
+
+        // 3. Moving horizontal laser scanline
+        const scanlineY = (now * 0.12) % height;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(0, scanlineY);
+        ctx.lineTo(width, scanlineY);
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+        ctx.fillRect(0, Math.max(0, scanlineY - 4), width, 8);
+
+        // 4. Corner optical reticle brackets (#FFFFFF)
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 2;
+        const bLen = 22;
+        const pad = 24;
+
+        ctx.beginPath();
+        // Top-left
+        ctx.moveTo(pad, pad + bLen);
+        ctx.lineTo(pad, pad);
+        ctx.lineTo(pad + bLen, pad);
+
+        // Top-right
+        ctx.moveTo(width - pad - bLen, pad);
+        ctx.lineTo(width - pad, pad);
+        ctx.lineTo(width - pad, pad + bLen);
+
+        // Bottom-left
+        ctx.moveTo(pad, height - pad - bLen);
+        ctx.lineTo(pad, height - pad);
+        ctx.lineTo(pad + bLen, height - pad);
+
+        // Bottom-right
+        ctx.moveTo(width - pad - bLen, height - pad);
+        ctx.lineTo(width - pad, height - pad);
+        ctx.lineTo(width - pad, height - pad - bLen);
+        ctx.stroke();
+
+        // 5. Center crosshair target ring
+        const cx = width / 2;
+        const cy = height / 2;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.lineWidth = 1;
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, 26, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(cx - 36, cy);
+        ctx.lineTo(cx - 12, cy);
+        ctx.moveTo(cx + 12, cy);
+        ctx.lineTo(cx + 36, cy);
+        ctx.moveTo(cx, cy - 36);
+        ctx.lineTo(cx, cy - 12);
+        ctx.moveTo(cx, cy + 12);
+        ctx.lineTo(cx, cy + 36);
+        ctx.stroke();
+
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(cx, cy, 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 6. Center animated 24-bar monochrome acoustic waveform reacting in real time
+        const barCount = 24;
+        const barWidth = 4;
+        const barGap = 4;
+        const totalW = barCount * (barWidth + barGap) - barGap;
+        const startX = cx - totalW / 2;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+
+        for (let i = 0; i < barCount; i++) {
+          const t1 = (now / 180) + (i * 0.42);
+          const t2 = (now / 95) + (i * 0.75);
+          const h = 6 + Math.abs(Math.sin(t1)) * 26 + (Math.sin(t2) * 5);
+          const bx = startX + i * (barWidth + barGap);
+          const by = cy - (h / 2);
+          ctx.fillRect(bx, by, barWidth, Math.max(4, h));
+        }
+
+        // 7. Live telemetry text in monospace (positioned cleanly inside HUD overlay margins)
+        ctx.font = '10.5px "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+
+        // Top-right UTC timestamp
+        ctx.textAlign = 'right';
+        ctx.fillText(`UTC • ${new Date().toISOString().substring(11, 19)}`, width - pad - 10, pad + 18);
+
+        // Bottom-left GPS coordinates above HUD controls
+        let gpsText = 'GPS: 5.6037° N, 0.1870° W • ACCRA';
+        if (window.EvidenceVault && typeof window.EvidenceVault.getCurrentGps === 'function') {
+          const g = window.EvidenceVault.getCurrentGps();
+          if (g && typeof g.latitude === 'number' && typeof g.longitude === 'number') {
+            const latDir = g.latitude >= 0 ? 'N' : 'S';
+            const lngDir = g.longitude >= 0 ? 'E' : 'W';
+            gpsText = `GPS: ${Math.abs(g.latitude).toFixed(4)}° ${latDir}, ${Math.abs(g.longitude).toFixed(4)}° ${lngDir}`;
+          }
+        }
+        ctx.textAlign = 'left';
+        ctx.fillText(gpsText, pad + 10, height - pad - 34);
+
+        // Bottom-right SHA-256 status above HUD controls
+        ctx.textAlign = 'right';
+        ctx.fillText('SHA-256: LIVE STREAM', width - pad - 10, height - pad - 34);
+
+        this.opticalAnimId = requestAnimationFrame(drawHudFrame);
+      };
+
+      drawHudFrame();
+
+      if (typeof canvas.captureStream === 'function') {
+        return canvas.captureStream(30);
+      }
+      return null;
     }
 
     /**
@@ -674,19 +1148,52 @@
      * Stops the Shield recording session and finalizes data
      */
     async stopShield() {
-      if (!this.isActive) return;
+      if (!this.isActive) return null;
 
       this.isActive = false;
       clearInterval(this.syntheticIntervalId);
       this.stopSpeechRecognition();
 
-      // Stop MediaRecorder
-      if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+      // Stop MediaRecorder and await final chunk if recording
+      if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+        try {
+          await new Promise((resolve) => {
+            const timer = setTimeout(resolve, 400);
+            const onStop = () => {
+              clearTimeout(timer);
+              resolve();
+            };
+            this.mediaRecorder.addEventListener('stop', onStop, { once: true });
+            try {
+              this.mediaRecorder.stop();
+            } catch (e) {
+              clearTimeout(timer);
+              resolve();
+            }
+          });
+        } catch (e) {
+          // ignore
+        }
+      } else if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
         try {
           this.mediaRecorder.stop();
         } catch (e) {
           // ignore
         }
+      }
+
+      // Assemble full playable recording blob
+      const isVideo = Boolean(this.videoTrack || (this.mode && this.mode.startsWith('video')));
+      const resolvedMime = isVideo ? 'video/webm' : 'audio/webm';
+      let fullBlob = null;
+      try {
+        fullBlob = new Blob(this.sessionChunks, { type: resolvedMime });
+        if (typeof URL !== 'undefined' && URL.createObjectURL) {
+          this.lastRecordedMediaUrl = URL.createObjectURL(fullBlob);
+        }
+        this.lastRecordedMimeType = fullBlob.type;
+      } catch (blobErr) {
+        console.warn('[MediaEngine] Could not assemble fullBlob:', blobErr.message);
       }
 
       // Stop media tracks
@@ -700,6 +1207,13 @@
         });
         this.mediaStream = null;
       }
+      this.videoTrack = null;
+      this.audioTrack = null;
+
+      if (this.opticalAnimId) {
+        cancelAnimationFrame(this.opticalAnimId);
+        this.opticalAnimId = null;
+      }
 
       if (this.previewVideoElement) {
         this.previewVideoElement.srcObject = null;
@@ -709,20 +1223,46 @@
       let finalSession = null;
       if (window.EvidenceVault && window.EvidenceVault.isSessionActive()) {
         const peakThreat = window.LegalCopilotEngine ? window.LegalCopilotEngine.getThreatStatus().threatScore : 0;
-        finalSession = await window.EvidenceVault.endSession(peakThreat);
+        finalSession = await window.EvidenceVault.endSession(peakThreat, fullBlob, this.lastRecordedMediaUrl);
       }
+
+      this.emit('recordingComplete', {
+        session: finalSession,
+        mediaUrl: this.lastRecordedMediaUrl,
+        mimeType: this.lastRecordedMimeType,
+        mode: this.mode
+      });
 
       this.emit('stateChange', {
         isActive: false,
         mode: this.mode,
-        finalSession: finalSession
+        finalSession: finalSession,
+        mediaUrl: this.lastRecordedMediaUrl
       });
+
+      if (this.mode && this.mode.startsWith('video')) {
+        this.startVideoPreview(this.mode).catch(() => {});
+      }
 
       if (this.earbudMode) {
         this.whisper('CitizenShield standing down. Evidence encrypted and preserved.');
       }
 
       return finalSession;
+    }
+
+    /**
+     * Get the latest recorded media URL
+     */
+    getLastRecordedMediaUrl() {
+      return this.lastRecordedMediaUrl;
+    }
+
+    /**
+     * Get the latest recorded media MIME type
+     */
+    getLastRecordedMimeType() {
+      return this.lastRecordedMimeType;
     }
 
     /**

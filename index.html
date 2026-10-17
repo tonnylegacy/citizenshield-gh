@@ -31,39 +31,41 @@
          FLOATING TOP NAVIGATION HEADER
          ==================================================================== -->
     <header class="telemetry-header">
-      <div class="brand-block">
-        <div class="brand-emblem" aria-label="CitizenShield Emblem">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            <path d="M9 12l2 2 4-4"/>
-          </svg>
-        </div>
-        <div class="brand-titles">
-          <div class="brand-title">Citizen<span>Shield</span> <sup class="gh-pill">GH</sup></div>
-          <div class="brand-subtitle">
-            <span class="status-dot-offline" id="header-db-indicator"></span>
-            <span id="header-db-status">19 Statutes Offline</span>
+      <div class="header-top-row">
+        <div class="brand-block">
+          <div class="brand-emblem" aria-label="CitizenShield Emblem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <path d="M9 12l2 2 4-4"/>
+            </svg>
+          </div>
+          <div class="brand-titles">
+            <div class="brand-title">Citizen<span>Shield</span> <sup class="gh-pill">GH</sup></div>
+            <div class="brand-subtitle">
+              <span class="status-dot-offline" id="header-db-indicator"></span>
+              <span id="header-db-status">19 Statutes Offline</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="header-actions">
-        <button type="button" class="header-btn btn-stealth" id="btn-trigger-stealth" title="Cloak Screen (OLED Lock Screen)">
-          <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
-            <circle cx="12" cy="12" r="3"/>
-            <line x1="3" y1="3" x2="21" y2="21"/>
-          </svg>
-          <span>Stealth</span>
-        </button>
-        <button type="button" class="header-btn btn-sos" id="btn-trigger-sos" title="Trigger Emergency SOS">
-          <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-            <line x1="12" y1="9" x2="12" y2="13"/>
-            <line x1="12" y1="17" x2="12.01" y2="17"/>
-          </svg>
-          <span>SOS</span>
-        </button>
+        <div class="header-actions">
+          <button type="button" class="header-btn btn-stealth" id="btn-trigger-stealth" title="Cloak Screen (OLED Lock Screen)">
+            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+              <circle cx="12" cy="12" r="3"/>
+              <line x1="3" y1="3" x2="21" y2="21"/>
+            </svg>
+            <span>Stealth</span>
+          </button>
+          <button type="button" class="header-btn btn-sos" id="btn-trigger-sos" title="Trigger Emergency SOS">
+            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <span>SOS</span>
+          </button>
+        </div>
       </div>
     </header>
 
@@ -98,11 +100,21 @@
               </div>
             </div>
 
-            <!-- Video Viewfinder Preview (Only when Open Video Mode is selected) -->
+            <!-- Live Optical Video Viewfinder HUD (Front & Center When Video Mode is Active) -->
             <div class="video-preview-wrapper" id="video-preview-box">
               <video id="video-element" autoplay playsinline muted></video>
-              <div class="video-live-tag">
-                <span class="rec-dot"></span> Consensual Viewfinder
+              <div class="video-hud-overlay">
+                <div class="hud-corner hud-corner-tl"></div>
+                <div class="hud-corner hud-corner-tr"></div>
+                <div class="hud-corner hud-corner-bl"></div>
+                <div class="hud-corner hud-corner-br"></div>
+                <div class="video-live-tag">
+                  <span class="rec-dot"></span> <span id="video-hud-mode-text">LIVE OPTICAL FEED • TORCH OFF</span>
+                </div>
+                <div class="video-hud-controls">
+                  <button type="button" class="hud-control-btn" id="btn-flip-camera">Flip Camera</button>
+                  <button type="button" class="hud-control-btn" id="btn-dim-video">Dim Viewfinder</button>
+                </div>
               </div>
             </div>
 
@@ -122,6 +134,19 @@
                 </svg>
                 <span id="btn-call-lawyer-text">Call My Lawyer / Legal Aid</span>
               </a>
+            </div>
+
+            <!-- Instant Recorded Video/Audio Playback Card -->
+            <div class="latest-media-box" id="latest-media-box" style="display:none;">
+              <div class="latest-media-header">
+                <span class="latest-media-title">
+                  <svg class="mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+                  Latest Encrypted Recording
+                </span>
+                <button type="button" class="btn-close-media" id="btn-close-latest-media" title="Close player">✕</button>
+              </div>
+              <video id="latest-playback-video" controls playsinline style="display:none; width:100%; border-radius:10px;"></video>
+              <audio id="latest-playback-audio" controls style="display:none; width:100%;"></audio>
             </div>
 
             <!-- Segmented Recording Mode Selector (Zero Emojis) -->
@@ -277,153 +302,170 @@
                   </div>
                 </div>
 
-                <div class="legal-card-body">
-                  <div class="legal-bento-pair">
-                    <div class="legal-section-block">
-                      <span class="legal-section-label">Your Protected Right</span>
-                      <p class="legal-right-text" id="legal-card-right">
-                        Police officers have no statutory power to unlock your smartphone, confiscate your ignition keys, or collect cash spot-fines on the roadside.
-                      </p>
-                    </div>
+                <details class="sci-fi-accordion legal-details-accordion">
+                  <summary class="sci-fi-accordion-summary">
+                    <span>View Constitutional Authority & Officer Limits</span>
+                    <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                  </summary>
+                  <div class="legal-card-body">
+                    <div class="legal-bento-pair">
+                      <div class="legal-section-block">
+                        <span class="legal-section-label">Your Protected Right</span>
+                        <p class="legal-right-text" id="legal-card-right">
+                          Police officers have no statutory power to unlock your smartphone, confiscate your ignition keys, or collect cash spot-fines on the roadside.
+                        </p>
+                      </div>
 
-                    <div class="legal-section-block boundary-block">
-                      <span class="legal-section-label">Officer Legal Limit</span>
-                      <div class="officer-boundary-box" id="legal-card-boundary">
-                        Criminal Procedure Act (Act 30) & AG 2024 Directives prohibit arbitrary device searches and vehicle impoundment for minor traffic infractions.
+                      <div class="legal-section-block boundary-block">
+                        <span class="legal-section-label">Officer Legal Limit</span>
+                        <div class="officer-boundary-box" id="legal-card-boundary">
+                          Criminal Procedure Act (Act 30) & AG 2024 Directives prohibit arbitrary device searches and vehicle impoundment for minor traffic infractions.
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                </details>
               </article>
             </div>
 
-            <!-- Tactical Verbal Watermark & Officer Badge Logger -->
-            <div class="watermark-section tilt-card">
-              <div class="watermark-top-row">
-                <div class="watermark-title-group">
-                  <div class="watermark-icon-badge">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                      <circle cx="12" cy="10" r="3"/>
-                      <path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/>
-                    </svg>
+            <!-- Simulation & Officer Badge Bench -->
+            <details class="sci-fi-accordion bench-accordion" open style="margin-top:14px;">
+              <summary class="sci-fi-accordion-summary">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <svg class="mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><circle cx="12" cy="10" r="3"/></svg>
+                  <span>Officer Badge Watermarking & Simulator</span>
+                </div>
+                <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+              </summary>
+
+              <!-- Tactical Verbal Watermark & Officer Badge Logger -->
+              <div class="watermark-section tilt-card" style="margin-top:10px;">
+                <div class="watermark-top-row">
+                  <div class="watermark-title-group">
+                    <div class="watermark-icon-badge">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        <circle cx="12" cy="10" r="3"/>
+                        <path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 class="watermark-label">Officer Badge Watermarking</h3>
+                      <p class="tip-text" id="watermark-tip-text">
+                        Say the officer's name or badge number aloud (e.g. <em>"Okay Sgt. Mensah, #44821"</em>) to auto-stamp it into evidence.
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 class="watermark-label">Officer Badge Watermarking</h3>
-                    <p class="tip-text" id="watermark-tip-text">
-                      Say the officer's name or badge number aloud (e.g. <em>"Okay Sgt. Mensah, #44821"</em>) to auto-stamp it into evidence.
-                    </p>
+                  <span class="pinned-counter-pill" id="pinned-count-label">0 Logged</span>
+                </div>
+
+                <div class="pinned-chips-container" id="pinned-chips-container">
+                  <span class="empty-chips-placeholder" id="empty-chips-msg">No officer badges logged in this session yet.</span>
+                </div>
+
+                <form class="badge-quick-input" id="form-pin-badge">
+                  <input type="text" id="input-pin-badge" class="badge-input-field" placeholder="Log badge, rank, or patrol plate (e.g. Sgt. Mensah #44821, GP 2841)..." autocomplete="off">
+                  <button type="submit" class="btn-pin-badge">Stamp Evidence</button>
+                </form>
+              </div>
+
+              <!-- Live Conversation Stream & Interactive Scenario Simulator -->
+              <div class="transcript-section" style="margin-top:10px;">
+                <div class="transcript-header">
+                  <div class="transcript-title-wrap">
+                    <span class="live-audio-wave" aria-hidden="true">
+                      <i></i><i></i><i></i><i></i>
+                    </span>
+                    <span class="transcript-title">Live Acoustic Stream & Scenario Test Bench</span>
+                  </div>
+                  <span class="engine-ready-tag" id="speech-engine-indicator">On-Device AI Ready</span>
+                </div>
+
+                <div class="transcript-feed" id="transcript-feed" role="log" aria-live="polite">
+                  <div class="transcript-line speaker-system">
+                    <span class="transcript-timestamp">Ready</span> Tap any real-world Ghana encounter below to test instant legal matching, or speak into your mic.
                   </div>
                 </div>
-                <span class="pinned-counter-pill" id="pinned-count-label">0 Logged</span>
-              </div>
 
-              <div class="pinned-chips-container" id="pinned-chips-container">
-                <span class="empty-chips-placeholder" id="empty-chips-msg">No officer badges logged in this session yet.</span>
-              </div>
+                <div class="simulator-header-row">
+                  <span class="simulator-label">Simulate Real-World Ghana Police Encounters</span>
+                  <span class="simulator-sub">Tap to test instant AI response</span>
+                </div>
 
-              <form class="badge-quick-input" id="form-pin-badge">
-                <input type="text" id="input-pin-badge" class="badge-input-field" placeholder="Log badge, rank, or patrol plate (e.g. Sgt. Mensah #44821, GP 2841)..." autocomplete="off">
-                <button type="submit" class="btn-pin-badge">Stamp Evidence</button>
-              </form>
-            </div>
+                <div class="scenario-chips-grid">
+                  <button type="button" class="btn-scenario-chip" data-scenario="phone">
+                    <svg class="chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+                    <div class="chip-copy">
+                      <strong>Phone Search Demand</strong>
+                      <span>“Unlock your phone let me check”</span>
+                    </div>
+                  </button>
+
+                  <button type="button" class="btn-scenario-chip" data-scenario="keys">
+                    <svg class="chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg>
+                    <div class="chip-copy">
+                      <strong>Car Key Snatching</strong>
+                      <span>“Give me your car keys right now”</span>
+                    </div>
+                  </button>
+
+                  <button type="button" class="btn-scenario-chip" data-scenario="spotfine">
+                    <svg class="chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
+                    <div class="chip-copy">
+                      <strong>Roadside Cash Demand</strong>
+                      <span>“Pay 200 cedis spot fine cash”</span>
+                    </div>
+                  </button>
+
+                  <button type="button" class="btn-scenario-chip" data-scenario="license">
+                    <svg class="chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect width="18" height="14" x="3" y="5" rx="2"/><path d="M7 15h4M15 15h2M7 11h2"/></svg>
+                    <div class="chip-copy">
+                      <strong>Physical License (24h Rule)</strong>
+                      <span>“Where is your driver's license?”</span>
+                    </div>
+                  </button>
+
+                  <button type="button" class="btn-scenario-chip" data-scenario="smoking">
+                    <svg class="chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    <div class="chip-copy">
+                      <strong>Narcotics / Bag Search</strong>
+                      <span>“We suspect you of smoking”</span>
+                    </div>
+                  </button>
+
+                  <button type="button" class="btn-scenario-chip" data-scenario="dreadlocks">
+                    <svg class="chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <div class="chip-copy">
+                      <strong>Dreadlocks / Profiling</strong>
+                      <span>“Look at your dreadlocks, step out”</span>
+                    </div>
+                  </button>
+
+                  <button type="button" class="btn-scenario-chip" data-scenario="watermark">
+                    <svg class="chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                    <div class="chip-copy">
+                      <strong>Verbal Badge Watermark</strong>
+                      <span>“Okay Sgt. Mensah, badge 44821”</span>
+                    </div>
+                  </button>
+
+                  <button type="button" class="btn-scenario-chip chip-critical" data-scenario="arrest">
+                    <svg class="chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <div class="chip-copy">
+                      <strong>Unlawful Arrest (Auto-SOS)</strong>
+                      <span>“You are under arrest! Give me phone!”</span>
+                    </div>
+                  </button>
+                </div>
+
+                <form class="custom-simulation-form" id="form-custom-sim">
+                  <input type="text" id="input-custom-sim" class="input-sim-text" placeholder="Or type any officer statement here to test the legal brain..." autocomplete="off">
+                  <button type="submit" class="btn-sim-send">Analyze Statement</button>
+                </form>
+              </div>
+            </details>
 
           </div>
-        </div>
-
-        <!-- Live Conversation Stream & Interactive Scenario Simulator -->
-        <div class="transcript-section">
-          <div class="transcript-header">
-            <div class="transcript-title-wrap">
-              <span class="live-audio-wave" aria-hidden="true">
-                <i></i><i></i><i></i><i></i>
-              </span>
-              <span class="transcript-title">Live Acoustic Stream & Scenario Test Bench</span>
-            </div>
-            <span class="engine-ready-tag" id="speech-engine-indicator">On-Device AI Ready</span>
-          </div>
-
-          <div class="transcript-feed" id="transcript-feed" role="log" aria-live="polite">
-            <div class="transcript-line speaker-system">
-              <span class="transcript-timestamp">Ready</span> Tap any real-world Ghana encounter below to test instant legal matching, or speak into your mic.
-            </div>
-          </div>
-
-          <div class="simulator-header-row">
-            <span class="simulator-label">Simulate Real-World Ghana Police Encounters</span>
-            <span class="simulator-sub">Tap to test instant AI response</span>
-          </div>
-
-          <div class="scenario-chips-grid">
-            <button type="button" class="btn-scenario-chip" data-scenario="phone">
-              <svg class="chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
-              <div class="chip-copy">
-                <strong>Phone Search Demand</strong>
-                <span>“Unlock your phone let me check”</span>
-              </div>
-            </button>
-
-            <button type="button" class="btn-scenario-chip" data-scenario="keys">
-              <svg class="chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg>
-              <div class="chip-copy">
-                <strong>Car Key Snatching</strong>
-                <span>“Give me your car keys right now”</span>
-              </div>
-            </button>
-
-            <button type="button" class="btn-scenario-chip" data-scenario="spotfine">
-              <svg class="chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
-              <div class="chip-copy">
-                <strong>Roadside Cash Demand</strong>
-                <span>“Pay 200 cedis spot fine cash”</span>
-              </div>
-            </button>
-
-            <button type="button" class="btn-scenario-chip" data-scenario="license">
-              <svg class="chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect width="18" height="14" x="3" y="5" rx="2"/><path d="M7 15h4M15 15h2M7 11h2"/></svg>
-              <div class="chip-copy">
-                <strong>Physical License (24h Rule)</strong>
-                <span>“Where is your driver's license?”</span>
-              </div>
-            </button>
-
-            <button type="button" class="btn-scenario-chip" data-scenario="smoking">
-              <svg class="chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-              <div class="chip-copy">
-                <strong>Narcotics / Bag Search</strong>
-                <span>“We suspect you of smoking”</span>
-              </div>
-            </button>
-
-            <button type="button" class="btn-scenario-chip" data-scenario="dreadlocks">
-              <svg class="chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              <div class="chip-copy">
-                <strong>Dreadlocks / Profiling</strong>
-                <span>“Look at your dreadlocks, step out”</span>
-              </div>
-            </button>
-
-            <button type="button" class="btn-scenario-chip" data-scenario="watermark">
-              <svg class="chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
-              <div class="chip-copy">
-                <strong>Verbal Badge Watermark</strong>
-                <span>“Okay Sgt. Mensah, badge 44821”</span>
-              </div>
-            </button>
-
-            <button type="button" class="btn-scenario-chip chip-critical" data-scenario="arrest">
-              <svg class="chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              <div class="chip-copy">
-                <strong>Unlawful Arrest (Auto-SOS)</strong>
-                <span>“You are under arrest! Give me phone!”</span>
-              </div>
-            </button>
-          </div>
-
-          <form class="custom-simulation-form" id="form-custom-sim">
-            <input type="text" id="input-custom-sim" class="input-sim-text" placeholder="Or type any officer statement here to test the legal brain..." autocomplete="off">
-            <button type="submit" class="btn-sim-send">Analyze Statement</button>
-          </form>
         </div>
 
       </section>

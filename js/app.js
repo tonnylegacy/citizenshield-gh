@@ -166,6 +166,7 @@
     btnTriggerSos: document.getElementById('btn-trigger-sos'),
     headerDbIndicator: document.getElementById('header-db-indicator'),
     headerDbStatus: document.getElementById('header-db-status'),
+    headerNavBtns: document.querySelectorAll('.header-nav-btn'),
 
     // Bottom Navigation
     navBtns: document.querySelectorAll('.bottom-nav .nav-item'),
@@ -176,10 +177,18 @@
     shieldStatusDot: document.getElementById('shield-status-dot'),
     shieldStatusText: document.getElementById('shield-status-text'),
     shieldModeLabel: document.getElementById('shield-mode-label'),
+    orbStageContainer: document.getElementById('orb-stage-trigger'),
     videoPreviewBox: document.getElementById('video-preview-box'),
     videoElement: document.getElementById('video-element'),
+    videoHudModeText: document.getElementById('video-hud-mode-text'),
+    btnFlipCamera: document.getElementById('btn-flip-camera'),
+    btnDimVideo: document.getElementById('btn-dim-video'),
     btnShieldMaster: document.getElementById('btn-shield-master'),
     btnShieldMasterText: document.getElementById('btn-shield-master-text'),
+    latestMediaBox: document.getElementById('latest-media-box'),
+    latestPlaybackVideo: document.getElementById('latest-playback-video'),
+    latestPlaybackAudio: document.getElementById('latest-playback-audio'),
+    btnCloseLatestMedia: document.getElementById('btn-close-latest-media'),
     modeRadios: document.querySelectorAll('input[name="recording-mode"]'),
     toggleEarbudWhisper: document.getElementById('toggle-earbud-whisper'),
     toggleStealthBlackout: document.getElementById('toggle-stealth-blackout'),
@@ -354,6 +363,12 @@
       btn.classList.toggle('active', isTarget);
     });
 
+    // Update top header navigation buttons
+    DOM.headerNavBtns.forEach(btn => {
+      const isTarget = btn.getAttribute('data-tab') === targetTabId;
+      btn.classList.toggle('active', isTarget);
+    });
+
     // Update view panes
     DOM.viewPanes.forEach(pane => {
       const isTarget = pane.id === targetTabId;
@@ -379,11 +394,147 @@
         }
       });
     });
+
+    DOM.headerNavBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetTab = btn.getAttribute('data-tab');
+        if (targetTab) {
+          switchTab(targetTab);
+        }
+      });
+    });
   }
 
   // ========================================================================
-  // 5. MASTER SHIELD CONTROLLER (START / STOP / SENSORS)
+  // 5. MASTER SHIELD CONTROLLER (START / STOP / SENSORS / OPTICAL HUD)
   // ========================================================================
+  let opticalStream = null;
+  let currentCameraFacing = 'environment';
+  let isVideoDimmed = false;
+
+  async function startOpticalCamera() {
+    try {
+      if (opticalStream) {
+        opticalStream.getTracks().forEach(t => t.stop());
+        opticalStream = null;
+      }
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.warn('[OpticalViewfinder] getUserMedia not available in this context.');
+        return;
+      }
+
+      try {
+        opticalStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: currentCameraFacing },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        });
+      } catch (e1) {
+        // Fallback to simple constraint
+        opticalStream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false
+        });
+      }
+
+      if (DOM.videoElement && opticalStream) {
+        DOM.videoElement.srcObject = opticalStream;
+        DOM.videoElement.muted = true;
+        await DOM.videoElement.play().catch(e => console.warn('[OpticalViewfinder] Video play warning:', e));
+      }
+    } catch (err) {
+      console.warn('[OpticalViewfinder] Camera access notice:', err.message);
+    }
+  }
+
+  function stopOpticalCamera() {
+    if (opticalStream) {
+      opticalStream.getTracks().forEach(t => t.stop());
+      opticalStream = null;
+    }
+    if (DOM.videoElement && !AppState.shieldActive) {
+      DOM.videoElement.srcObject = null;
+    }
+  }
+
+  async function flipCamera() {
+    currentCameraFacing = (currentCameraFacing === 'environment') ? 'user' : 'environment';
+    if (window.MediaEngine && typeof window.MediaEngine.flipCamera === 'function') {
+      await window.MediaEngine.flipCamera();
+    } else {
+      await startOpticalCamera();
+    }
+    showToast(`Camera: ${currentCameraFacing === 'user' ? 'Front (Self)' : 'Rear (Officer)'}`, 'safe');
+  }
+
+  function toggleDimVideo() {
+    isVideoDimmed = !isVideoDimmed;
+    if (DOM.videoElement) {
+      DOM.videoElement.classList.toggle('dimmed-stealth', isVideoDimmed);
+    }
+    if (DOM.btnDimVideo) {
+      DOM.btnDimVideo.textContent = isVideoDimmed ? 'Restore Viewfinder' : 'Dim Viewfinder';
+    }
+    showToast(isVideoDimmed ? 'Viewfinder Dimmed (Stealth)' : 'Viewfinder Restored', 'safe');
+  }
+
+  async function reconstructSessionMediaUrl(sessionId) {
+    if (!window.EvidenceVault) return null;
+    if (typeof window.EvidenceVault.reconstructSessionMediaUrl === 'function') {
+      return await window.EvidenceVault.reconstructSessionMediaUrl(sessionId);
+    }
+    try {
+      const session = await window.EvidenceVault.getSessionById(sessionId);
+      if (session && session.chunks && session.chunks.length > 0) {
+        const validBlobs = session.chunks.map(c => c.blob).filter(Boolean);
+        if (validBlobs.length > 0) {
+          const mimeType = session.chunks[0].type || (session.mode?.includes('video') ? 'video/webm' : 'audio/webm');
+          const combinedBlob = new Blob(validBlobs, { type: mimeType });
+          return URL.createObjectURL(combinedBlob);
+        }
+      }
+    } catch (e) {
+      console.warn('[Vault] Failed to reconstruct media URL:', e);
+    }
+    return null;
+  }
+
+  function revealLatestMedia(url, mode = 'audio') {
+    if (!DOM.latestMediaBox) return;
+    DOM.latestMediaBox.style.display = 'block';
+
+    const isVideo = mode && (mode.includes('video') || mode === 'secret-video' || mode === 'open-video');
+
+    if (isVideo && DOM.latestPlaybackVideo) {
+      DOM.latestPlaybackVideo.style.display = 'block';
+      DOM.latestPlaybackVideo.src = url;
+      if (DOM.latestPlaybackAudio) DOM.latestPlaybackAudio.style.display = 'none';
+    } else if (DOM.latestPlaybackAudio) {
+      DOM.latestPlaybackAudio.style.display = 'block';
+      DOM.latestPlaybackAudio.src = url;
+      if (DOM.latestPlaybackVideo) DOM.latestPlaybackVideo.style.display = 'none';
+    }
+  }
+
+  function hideLatestMedia() {
+    if (!DOM.latestMediaBox) return;
+    DOM.latestMediaBox.style.display = 'none';
+    if (DOM.latestPlaybackVideo) {
+      DOM.latestPlaybackVideo.pause();
+      DOM.latestPlaybackVideo.src = '';
+      DOM.latestPlaybackVideo.style.display = 'none';
+    }
+    if (DOM.latestPlaybackAudio) {
+      DOM.latestPlaybackAudio.pause();
+      DOM.latestPlaybackAudio.src = '';
+      DOM.latestPlaybackAudio.style.display = 'none';
+    }
+  }
+
   function getSelectedRecordingMode() {
     let selectedMode = 'audio';
     DOM.modeRadios.forEach(radio => {
@@ -407,19 +558,42 @@
     });
 
     let displayStr = 'Stealth Audio';
-    if (rawValue === 'secret-video') displayStr = 'Discrete Video (No Flash)';
-    if (rawValue === 'open-video') displayStr = 'Open Viewfinder';
+    if (rawValue === 'secret-video') displayStr = 'Discrete Video (Torch Off)';
+    if (rawValue === 'open-video') displayStr = 'Open Camera Viewfinder';
     
     if (DOM.shieldModeLabel) {
       DOM.shieldModeLabel.textContent = displayStr;
     }
 
-    // Toggle video viewfinder box
+    const isVideoMode = (rawValue === 'secret-video' || rawValue === 'open-video');
+
+    // Toggle video viewfinder box & 3D orb stage so video takes the hero stage cleanly
     if (DOM.videoPreviewBox) {
-      const isOpen = rawValue === 'open-video';
-      DOM.videoPreviewBox.classList.toggle('visible', isOpen);
-      if (isOpen && window.MediaEngine && DOM.videoElement) {
+      DOM.videoPreviewBox.classList.toggle('visible', isVideoMode);
+    }
+    if (DOM.orbStageContainer) {
+      DOM.orbStageContainer.style.display = isVideoMode ? 'none' : 'flex';
+    }
+
+    if (isVideoMode) {
+      if (DOM.videoHudModeText) {
+        DOM.videoHudModeText.textContent = rawValue === 'secret-video' 
+          ? 'DISCRETE OPTICAL FEED • TORCH LOCKED OFF'
+          : 'LIVE OPTICAL FEED • PUBLIC WITNESS';
+      }
+      if (window.MediaEngine && DOM.videoElement) {
         window.MediaEngine.attachVideoPreview(DOM.videoElement);
+        if (typeof window.MediaEngine.startVideoPreview === 'function') {
+          window.MediaEngine.startVideoPreview(getSelectedRecordingMode());
+        }
+      } else {
+        startOpticalCamera();
+      }
+    } else {
+      if (window.MediaEngine && typeof window.MediaEngine.switchMode === 'function') {
+        window.MediaEngine.switchMode('audio-stealth');
+      } else {
+        stopOpticalCamera();
       }
     }
   }
@@ -457,7 +631,7 @@
 
     // Call Media Engine
     if (window.MediaEngine) {
-      if (DOM.videoElement && mode === 'video-open') {
+      if (DOM.videoElement && (mode.includes('video') || mode === 'video-open' || mode === 'video-stealth')) {
         window.MediaEngine.attachVideoPreview(DOM.videoElement);
       }
       await window.MediaEngine.startShield(mode);
@@ -488,10 +662,19 @@
     clearInterval(AppState.sessionTimerId);
 
     // Stop Media Engine & Finalize Vault
+    let finalSession = null;
     if (window.MediaEngine) {
-      await window.MediaEngine.stopShield();
+      finalSession = await window.MediaEngine.stopShield();
     } else if (window.EvidenceVault) {
-      await window.EvidenceVault.endSession();
+      finalSession = await window.EvidenceVault.endSession();
+    }
+
+    // Reveal latest recorded evidence playback immediately on home screen
+    if (finalSession && finalSession.id) {
+      const mediaUrl = await reconstructSessionMediaUrl(finalSession.id);
+      if (mediaUrl) {
+        revealLatestMedia(mediaUrl, finalSession.mode);
+      }
     }
 
     // Reset Threat Meter
@@ -521,6 +704,20 @@
       radio.addEventListener('change', updateModeLabel);
     });
     updateModeLabel();
+
+    // Camera HUD controls
+    DOM.btnFlipCamera?.addEventListener('click', flipCamera);
+    DOM.btnDimVideo?.addEventListener('click', toggleDimVideo);
+    DOM.btnCloseLatestMedia?.addEventListener('click', hideLatestMedia);
+
+    // Listen for recording completion events if emitted by MediaEngine
+    if (window.MediaEngine) {
+      window.MediaEngine.on('recordingComplete', (data) => {
+        if (data && data.mediaUrl) {
+          revealLatestMedia(data.mediaUrl, data.mode);
+        }
+      });
+    }
 
     // Earbud Whisper switch
     DOM.toggleEarbudWhisper?.addEventListener('change', (e) => {
@@ -554,7 +751,6 @@
       }
     });
 
-    // Top Header Quick SOS
     DOM.btnTriggerSos?.addEventListener('click', () => {
       if (window.SOSDispatcher) {
         window.SOSDispatcher.triggerSOS(true, 'Manual Top Header Trigger');
@@ -1219,6 +1415,9 @@
         </div>
 
         <div class="session-actions-bar">
+          <button type="button" class="btn-vault-action btn-play-session" data-action="play" data-id="${session.id}">
+            ▶ Play Recording
+          </button>
           <button type="button" class="btn-vault-action btn-dossier" data-action="dossier" data-id="${session.id}">
             Export Court Dossier
           </button>
@@ -1233,6 +1432,44 @@
           </button>
         </div>
       `;
+
+      // Wire Play Recording Inline Player
+      const playBtn = card.querySelector('[data-action="play"]');
+      if (playBtn) {
+        playBtn.addEventListener('click', async () => {
+          let playerContainer = card.querySelector('.session-inline-player');
+          if (playerContainer) {
+            playerContainer.remove();
+            playBtn.textContent = '▶ Play Recording';
+            return;
+          }
+
+          playBtn.textContent = 'Loading...';
+          const mediaUrl = await reconstructSessionMediaUrl(session.id);
+          if (!mediaUrl) {
+            showToast('No playable media recorded for this session', 'warning');
+            playBtn.textContent = '▶ Play Recording';
+            return;
+          }
+
+          playerContainer = document.createElement('div');
+          playerContainer.className = 'session-inline-player';
+
+          const isVideo = session.mode && session.mode.includes('video');
+          if (isVideo) {
+            playerContainer.innerHTML = `
+              <video src="${mediaUrl}" controls autoplay playsinline style="width:100%; border-radius:8px; display:block;"></video>
+            `;
+          } else {
+            playerContainer.innerHTML = `
+              <audio src="${mediaUrl}" controls autoplay style="width:100%; display:block;"></audio>
+            `;
+          }
+
+          card.querySelector('.session-body').appendChild(playerContainer);
+          playBtn.textContent = '⏹ Stop Playing';
+        });
+      }
 
       // Wire Dossier Export
       const dossierBtn = card.querySelector('[data-action="dossier"]');
@@ -1745,14 +1982,14 @@
         OrbState.rotX += OrbState.velX;
       }
 
-      // Select RGB palette by state
-      let r = 229, g = 184, b = 105; // Warm Champagne Gold standby
+      // Select RGB palette by state: Pure Stark White & Silver Monochrome
+      let r = 250, g = 250, b = 250; // Standby Stark White
       if (OrbState.threatState === 'CRITICAL') {
-        r = 239; g = 68; b = 68; // Critical Crimson
+        r = 255; g = 59; b = 48; // Signal Red
       } else if (OrbState.threatState === 'ELEVATED') {
-        r = 245; g = 158; b = 11; // Caution Saffron
+        r = 212; g = 212; b = 216; // Silver
       } else if (OrbState.armed) {
-        r = 16; g = 185; b = 129; // Sovereign Jade
+        r = 255; g = 255; b = 255; // Pure Stark White
       }
 
       const cx = size / 2;
@@ -1841,7 +2078,7 @@
         const dotSize = pt.isRing ? (1.3 * pt.scale) : (1.95 * pt.scale);
 
         ctx.fillStyle = pt.isRing
-          ? `rgba(229, 184, 105, ${alpha * 0.72})`
+          ? `rgba(212, 212, 216, ${alpha * 0.65})`
           : `rgba(${r}, ${g}, ${b}, ${alpha})`;
         ctx.beginPath();
         ctx.arc(pt.sx, pt.sy, dotSize, 0, Math.PI * 2);
