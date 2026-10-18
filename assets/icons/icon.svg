@@ -1,42 +1,53 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#064E3B"/>
-      <stop offset="100%" stop-color="#022c22"/>
+    <radialGradient id="coreGlow" cx="50%" cy="42%" r="55%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.22"/>
+      <stop offset="60%" stop-color="#FFFFFF" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="shieldStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="55%" stop-color="#E4E4E7"/>
+      <stop offset="100%" stop-color="#71717A"/>
     </linearGradient>
-    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#FCD34D"/>
-      <stop offset="100%" stop-color="#D97706"/>
+    <linearGradient id="shieldBody" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#141418"/>
+      <stop offset="100%" stop-color="#050507"/>
     </linearGradient>
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#F59E0B" flood-opacity="0.3"/>
-    </filter>
   </defs>
-  <!-- Background Shield Shape -->
-  <path d="M256 32 L448 96 V256 C448 376 364 456 256 480 C148 456 64 376 64 256 V96 Z" fill="url(#shieldGrad)" stroke="#10B981" stroke-width="8"/>
-  
-  <!-- Outer Gold Rim -->
-  <path d="M256 56 L424 112 V256 C424 360 348 434 256 456 C164 434 88 360 88 256 V112 Z" fill="#050B14" opacity="0.85"/>
-  
-  <!-- Balance of Justice Scales -->
-  <!-- Center Pillar -->
-  <rect x="250" y="140" width="12" height="210" rx="6" fill="url(#goldGrad)" filter="url(#glow)"/>
-  <!-- Base Pedestal -->
-  <path d="M206 350 L306 350 L316 366 L196 366 Z" fill="url(#goldGrad)"/>
-  <!-- Top Finial / Star -->
-  <polygon points="256,110 263,126 280,126 266,136 271,152 256,142 241,152 246,136 232,126 249,126" fill="#FCD34D"/>
-  
-  <!-- Balance Crossbar -->
-  <rect x="156" y="165" width="200" height="8" rx="4" fill="url(#goldGrad)"/>
-  <circle cx="256" cy="169" r="8" fill="#F59E0B"/>
-  
-  <!-- Left Pan & Strings -->
-  <line x1="170" y1="173" x2="140" y2="230" stroke="#FCD34D" stroke-width="3"/>
-  <line x1="170" y1="173" x2="200" y2="230" stroke="#FCD34D" stroke-width="3"/>
-  <path d="M130 230 C130 250 210 250 210 230 Z" fill="url(#goldGrad)"/>
-  
-  <!-- Right Pan & Strings -->
-  <line x1="342" y1="173" x2="312" y2="230" stroke="#FCD34D" stroke-width="3"/>
-  <line x1="342" y1="173" x2="372" y2="230" stroke="#FCD34D" stroke-width="3"/>
-  <path d="M302 230 C302 250 382 250 382 230 Z" fill="url(#goldGrad)"/>
+
+  <!-- Pitch Black OLED Squircle Canvas -->
+  <rect width="512" height="512" rx="112" fill="#000000"/>
+
+  <!-- Subtle 1px Architectural Sci-Fi Grid -->
+  <g stroke="#FFFFFF" stroke-opacity="0.045" stroke-width="1">
+    <line x1="0" y1="128" x2="512" y2="128"/>
+    <line x1="0" y1="256" x2="512" y2="256"/>
+    <line x1="0" y1="384" x2="512" y2="384"/>
+    <line x1="128" y1="0" x2="128" y2="512"/>
+    <line x1="256" y1="0" x2="256" y2="512"/>
+    <line x1="384" y1="0" x2="384" y2="512"/>
+  </g>
+
+  <!-- Volumetric Monochrome Core Aura -->
+  <circle cx="256" cy="248" r="210" fill="url(#coreGlow)"/>
+
+  <!-- Outer Orbital Telemetry Ring -->
+  <ellipse cx="256" cy="256" rx="196" ry="74" fill="none" stroke="#FFFFFF" stroke-opacity="0.16" stroke-width="2" stroke-dasharray="6 8" transform="rotate(-18 256 256)"/>
+
+  <!-- Precision Faceted Sci-Fi Shield -->
+  <path d="M256 76 L396 132 V246 C396 342 334 414 256 444 C178 414 116 342 116 246 V132 L256 76 Z"
+        fill="url(#shieldBody)" stroke="url(#shieldStroke)" stroke-width="10" stroke-linejoin="round"/>
+
+  <!-- Inner Architectural Shield Hairline -->
+  <path d="M256 104 L368 149 V244 C368 323 318 383 256 410 C194 383 144 323 144 244 V149 L256 104 Z"
+        fill="none" stroke="#FFFFFF" stroke-opacity="0.22" stroke-width="2" stroke-linejoin="round"/>
+
+  <!-- Center Geodesic Sphere Core & Acoustic Pillar -->
+  <circle cx="256" cy="248" r="56" fill="none" stroke="#FFFFFF" stroke-opacity="0.32" stroke-width="2" stroke-dasharray="4 6"/>
+  <path d="M228 248 L248 268 L288 228" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Corner Optical Target Reticles -->
+  <path d="M64 96 V64 H96 M416 64 H448 V96 M64 416 V448 H96 M416 448 H448 V416"
+        fill="none" stroke="#FFFFFF" stroke-opacity="0.28" stroke-width="3" stroke-linecap="round"/>
 </svg>

@@ -9,7 +9,7 @@ package.json
 package-lock.json
 run_e2e_verification.js
 capture_*.js
-*.png
+/*.png
 *.webm
 *.md
 .cloud-edge-store.json

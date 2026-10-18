@@ -1,17 +1,23 @@
 {
-  "name": "Pocket Barrister Ghana — Citizen Encounter Guardian",
-  "short_name": "PocketBarrister",
-  "description": "Real-time AI legal shield for police encounters in Ghana. Authoritative 1992 Constitutional citations, respectful Ghanaian spoken scripts, tamper-evident recording, and emergency PPSB SOS dispatch.",
+  "name": "CitizenShield GH — Constitutional Copilot & Evidence Vault",
+  "short_name": "CitizenShield",
+  "description": "Real-time constitutional legal copilot, discrete optical witness, and AES-256-GCM zero-knowledge evidence vault for citizens in Ghana.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#050B14",
-  "theme_color": "#064E3B",
-  "categories": ["legal", "safety", "utilities", "social"],
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "categories": ["legal", "safety", "utilities", "security"],
   "lang": "en-GH",
   "dir": "ltr",
   "icons": [
+    {
+      "src": "./assets/icons/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "./assets/icons/icon-192.png",
       "sizes": "192x192",
@@ -33,23 +39,23 @@
   ],
   "shortcuts": [
     {
-      "name": "Start Safe Encounter",
-      "short_name": "Encounter",
-      "description": "Instantly start voice witness & legal analysis mode",
+      "name": "Arm Pocket Counsel",
+      "short_name": "Arm Shield",
+      "description": "Instantly start discrete witness & constitutional analysis",
       "url": "./index.html?mode=encounter",
       "icons": [{ "src": "./assets/icons/shield.png", "sizes": "96x96" }]
     },
     {
-      "name": "Emergency PPSB SOS",
+      "name": "Emergency SOS Dispatch",
       "short_name": "SOS Alert",
-      "description": "Send GPS coordinates & audio hash to trusted contacts & PPSB",
+      "description": "Send GPS coordinates & SHA-256 hash to trusted contacts & lawyer",
       "url": "./index.html?mode=sos",
       "icons": [{ "src": "./assets/icons/sos.png", "sizes": "96x96" }]
     },
     {
-      "name": "Ghana Law Library",
-      "short_name": "Laws",
-      "description": "Search 19 verified Ghanaian statutes & case laws",
+      "name": "Ghana Law Compendium",
+      "short_name": "Ghana Laws",
+      "description": "Search 19 verified Ghanaian statutes & Supreme Court precedents",
       "url": "./index.html?mode=laws",
       "icons": [{ "src": "./assets/icons/book.png", "sizes": "96x96" }]
     }

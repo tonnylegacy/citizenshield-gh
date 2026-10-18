@@ -3,7 +3,7 @@
  * Ensures 100% offline functionality during police encounters even when mobile data is cut or unavailable.
  */
 
-const CACHE_NAME = 'citizenshield-ghana-v2.2.0';
+const CACHE_NAME = 'citizenshield-ghana-v4.0.0';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -17,7 +17,10 @@ const STATIC_ASSETS = [
   './js/engine/stealth-mode.js',
   './js/engine/sos-dispatcher.js',
   './js/engine/supabase-sync.js',
-  './assets/icons/icon.svg'
+  './assets/icons/icon.svg',
+  './assets/icons/apple-touch-icon.png',
+  './assets/icons/icon-192.png',
+  './assets/icons/icon-512.png'
 ];
 
 // Install Event: Precaches core application shell & legal repository
