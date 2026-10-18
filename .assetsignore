@@ -1,0 +1,15 @@
+node_modules
+.git
+cloudflare
+supabase
+netlify
+server.js
+wrangler.toml
+package.json
+package-lock.json
+run_e2e_verification.js
+capture_*.js
+*.png
+*.webm
+*.md
+.cloud-edge-store.json

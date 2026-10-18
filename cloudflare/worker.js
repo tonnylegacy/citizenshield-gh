@@ -459,6 +459,11 @@ export default {
         }
       }
 
+      // 7. Serve static PWA frontend assets for all non-API routes
+      if (!pathname.startsWith('/api/') && env.ASSETS) {
+        return env.ASSETS.fetch(request);
+      }
+
       // Default 404
       return jsonResponse({ ok: false, error: `Route ${pathname} not found on Edge Worker` }, 404);
     } catch (err) {
