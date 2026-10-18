@@ -1954,6 +1954,91 @@ html, body {
 /* ==========================================================================
    TAB 3: ENCRYPTED EVIDENCE VAULT
    ========================================================================== */
+.vault-security-bar {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: var(--shadow-card);
+}
+
+.security-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.vault-sec-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.55);
+  flex-shrink: 0;
+}
+
+.vault-sec-label {
+  color: var(--text-tertiary);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+#vault-encryption-badge {
+  font-weight: 600;
+  color: #FAFAFA;
+  letter-spacing: 0.04em;
+}
+
+.quick-pin-verify-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.quick-pin-input {
+  flex: 1;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
+  padding: 8px 14px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.quick-pin-input:focus {
+  border-color: #FFFFFF;
+}
+
+.btn-verify-vault-pin {
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid #FFFFFF;
+  background: #FFFFFF;
+  color: #000000;
+  font-family: var(--font-display);
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-verify-vault-pin:hover {
+  background: #E4E4E7;
+  transform: translateY(-1px);
+}
+
 .vault-telemetry-card {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
@@ -2263,6 +2348,134 @@ html, body {
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary-action:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: #FFFFFF;
+}
+
+/* Flagship Cloudflare Edge & Cross-Device Vault UI */
+.vault-encryption-sub {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+
+.oauth-buttons-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 12px 0 10px;
+}
+
+.btn-oauth-monochrome {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-medium);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-oauth-monochrome:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: #FFFFFF;
+  transform: translateY(-1px);
+}
+
+.oauth-svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.auth-divider-line {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 6px 0 12px;
+  color: var(--text-tertiary);
+  font-size: 9.5px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+}
+
+.auth-divider-line::before,
+.auth-divider-line::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.auth-divider-line span {
+  padding: 0 10px;
+}
+
+.pin-inputs-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+
+.pin-inputs-grid > div {
+  min-width: 0;
+}
+
+.pin-input {
+  width: 100%;
+  min-width: 0;
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+}
+
+.cloud-actions-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.cloud-btn-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.sci-fi-accordion {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border-subtle);
+}
+
+.sci-fi-accordion summary {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s ease;
+}
+
+.sci-fi-accordion summary:hover {
+  color: var(--text-secondary);
+}
+
+.sci-fi-accordion[open] summary {
+  color: var(--text-primary);
+  margin-bottom: 8px;
 }
 
 .pro-header-row {
@@ -2402,7 +2615,8 @@ html, body {
 /* ==========================================================================
    STEALTH OLED BLACKOUT OVERLAY (#000000)
    ========================================================================== */
-.stealth-overlay {
+.stealth-overlay,
+#stealth-blackout-overlay {
   display: none;
   position: fixed;
   inset: 0;
@@ -2415,7 +2629,8 @@ html, body {
   user-select: none;
 }
 
-.stealth-overlay.active {
+.stealth-overlay.active,
+#stealth-blackout-overlay.active {
   display: flex;
 }
 

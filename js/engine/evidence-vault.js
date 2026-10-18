@@ -75,6 +75,7 @@
       this.activeSession = null;
       this.currentGps = { ...ACCRA_FALLBACK_GPS };
       this.gpsWatchId = null;
+      this.duressDecoyMode = false;
 
       // Event listeners
       this.listeners = {
@@ -82,7 +83,8 @@
         sessionEnded: [],
         chunkSaved: [],
         hashUpdated: [],
-        gpsUpdated: []
+        gpsUpdated: [],
+        vaultUpdated: []
       };
 
       this.initGeolocation();
@@ -505,8 +507,13 @@
 
     /**
      * Retrieve all saved sessions from IndexedDB or memory cache
+     * When duressDecoyMode is active, returns [] immediately (0 Sealed Dossiers)
      */
     async getAllSessions() {
+      if (this.duressDecoyMode) {
+        return [];
+      }
+
       await this.initPromise;
       if (!this.db) {
         return Array.from(this.inMemorySessions.values()).sort((a, b) => (b.startTime || 0) - (a.startTime || 0));
@@ -537,6 +544,181 @@
           resolve(fallbackList);
         }
       });
+    }
+
+    /**
+     * Set Duress Decoy Mode
+     * @param {boolean} enabled 
+     */
+    setDuressDecoyMode(enabled) {
+      this.duressDecoyMode = !!enabled;
+      this.emit('vaultUpdated', { duressDecoyMode: this.duressDecoyMode });
+      return this.duressDecoyMode;
+    }
+
+    /**
+     * Check if Duress Decoy Mode is active
+     * @returns {boolean}
+     */
+    isDuressDecoyMode() {
+      return !!this.duressDecoyMode;
+    }
+
+    /**
+     * Get aggregate vault statistics
+     * If duressDecoyMode is true, returns 0 counts for plausible deniability
+     */
+    async getVaultStats() {
+      if (this.duressDecoyMode) {
+        return {
+          sessionCount: 0,
+          totalChunks: 0,
+          totalSizeBytes: 0,
+          totalSizeFormatted: '0.0 KB',
+          totalWatermarks: 0,
+          isVerified: true,
+          duressDecoyMode: true
+        };
+      }
+
+      const sessions = await this.getAllSessions();
+      let totalChunks = 0;
+      let totalWatermarks = 0;
+      let totalSizeBytes = 0;
+
+      for (const s of sessions) {
+        const count = s.chunkCount || (s.chunks ? s.chunks.length : 0) || 0;
+        totalChunks += count;
+        totalWatermarks += (s.watermarks ? s.watermarks.length : 0);
+        if (s.chunks && s.chunks.length > 0) {
+          totalSizeBytes += s.chunks.reduce((sum, c) => sum + (c.size || 0), 0);
+        } else {
+          totalSizeBytes += count * 180 * 1024;
+        }
+      }
+
+      let totalSizeFormatted = '0.0 KB';
+      if (totalSizeBytes >= 1024 * 1024) {
+        totalSizeFormatted = `${(totalSizeBytes / (1024 * 1024)).toFixed(1)} MB`;
+      } else {
+        totalSizeFormatted = `${(totalSizeBytes / 1024).toFixed(1)} KB`;
+      }
+
+      return {
+        sessionCount: sessions.length,
+        totalChunks,
+        totalSizeBytes,
+        totalSizeFormatted,
+        totalWatermarks,
+        isVerified: true,
+        duressDecoyMode: false
+      };
+    }
+
+    /**
+     * Cross-Device Session Restoration
+     * Restores encrypted/sealed sessions fetched from Cloudflare Edge / Supabase into IndexedDB
+     * @param {Array} cloudSessions
+     * @returns {Promise<number>} count of restored sessions
+     */
+    async importRestoredSessions(cloudSessions = []) {
+      await this.initPromise;
+      if (!Array.isArray(cloudSessions) || cloudSessions.length === 0) return 0;
+
+      let restoredCount = 0;
+      for (const s of cloudSessions) {
+        if (!s || !s.id) continue;
+
+        // Check if session already exists
+        let existing = this.inMemorySessions.get(s.id);
+        if (!existing && this.db) {
+          try {
+            existing = await new Promise((resolve) => {
+              const tx = this.db.transaction(STORE_SESSIONS, 'readonly');
+              const store = tx.objectStore(STORE_SESSIONS);
+              const req = store.get(s.id);
+              req.onsuccess = (e) => resolve(e.target.result || null);
+              req.onerror = () => resolve(null);
+            });
+          } catch (e) {
+            existing = null;
+          }
+        }
+
+        if (!existing) {
+          const duration = s.durationMs || (s.endTime && s.startTime ? s.endTime - s.startTime : 0);
+          const normalized = {
+            id: s.id,
+            startTime: s.startTime || Date.now(),
+            endTime: s.endTime || (s.startTime ? s.startTime + duration : Date.now()),
+            durationMs: duration,
+            mode: s.mode || 'audio-stealth',
+            peakThreatScore: s.peakThreatScore ?? s.threatScorePeak ?? 0,
+            threatScorePeak: s.peakThreatScore ?? s.threatScorePeak ?? 0,
+            chunkCount: s.chunkCount || 0,
+            transcriptCount: s.transcriptCount || (s.transcripts ? s.transcripts.length : (s.transcript ? s.transcript.length : 0)),
+            watermarkCount: s.watermarkCount || (s.watermarks ? s.watermarks.length : 0),
+            finalChainHash: s.finalChainHash || s.cumulativeChainHash || 'RESTORED-SHA256',
+            cumulativeChainHash: s.finalChainHash || s.cumulativeChainHash || 'RESTORED-SHA256',
+            gps: s.gps || s.finalGps || s.initialGps || ACCRA_FALLBACK_GPS,
+            initialGps: s.initialGps || s.gps || ACCRA_FALLBACK_GPS,
+            finalGps: s.finalGps || s.gps || ACCRA_FALLBACK_GPS,
+            watermarks: s.watermarks || [],
+            transcripts: s.transcripts || s.transcript || [],
+            transcript: s.transcript || s.transcripts || [],
+            violations: s.violations || [],
+            status: 'sealed',
+            cloudRestored: true,
+            createdAt: s.createdAt || new Date(s.startTime || Date.now()).toISOString()
+          };
+
+          this.inMemorySessions.set(normalized.id, normalized);
+
+          if (this.db) {
+            try {
+              const tx = this.db.transaction(STORE_SESSIONS, 'readwrite');
+              tx.objectStore(STORE_SESSIONS).put(normalized);
+            } catch (e) {
+              console.warn('[EvidenceVault] Error storing restored session:', e);
+            }
+          }
+          restoredCount++;
+        }
+      }
+
+      if (restoredCount > 0) {
+        this.emit('vaultUpdated', { restoredCount, duressDecoyMode: this.duressDecoyMode });
+      }
+
+      return restoredCount;
+    }
+
+    /**
+     * Initialization alias
+     */
+    async init() {
+      return this.initPromise;
+    }
+
+    /**
+     * Watermark alias
+     */
+    addWatermark(marker) {
+      return this.appendWatermark(marker);
+    }
+
+    /**
+     * Get Session Dossier alias
+     */
+    async getSessionDossier(sessionId) {
+      return this.getSessionById(sessionId);
+    }
+
+    /**
+     * Export Court Dossier HTML alias
+     */
+    async exportCourtDossierHTML(sessionId) {
+      return this.exportCourtDossier(sessionId);
     }
 
     /**

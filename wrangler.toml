@@ -1,0 +1,19 @@
+name = "citizenshield-gh-edge"
+main = "cloudflare/worker.js"
+compatibility_date = "2024-11-01"
+
+# Cloudflare D1 Database Binding for Encrypted Identity & Evidence Ledger
+[[d1_databases]]
+binding = "DB"
+database_name = "citizenshield-gh-db"
+database_id = "citizenshield-gh-db-id"
+
+# Cloudflare R2 Object Storage for Encrypted Evidence Chunks & Court Dossiers
+[[r2_buckets]]
+binding = "VAULT_BUCKET"
+bucket_name = "citizenshield-evidence-vault"
+
+# Environment Variables & Edge Settings
+[vars]
+ENVIRONMENT = "production"
+TOKEN_ISSUER = "https://citizenshield.gh"

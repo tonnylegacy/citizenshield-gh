@@ -100,11 +100,338 @@ async function synthesizeNeuralAudio(text, voiceKey = 'ezinne') {
   return buffer;
 }
 
+// Local Cloudflare Edge Store (Persistence for Cross-Device Testing & Decoy Simulation)
+const STORE_FILE = path.join(__dirname, '.cloud-edge-store.json');
+
+function loadStore() {
+  try {
+    if (fs.existsSync(STORE_FILE)) {
+      const raw = fs.readFileSync(STORE_FILE, 'utf8');
+      const data = JSON.parse(raw);
+      return {
+        accounts: data.accounts || [],
+        sessions: data.sessions || [],
+        dispatches: data.dispatches || [],
+        watermarks: data.watermarks || [],
+        duressAlerts: data.duressAlerts || []
+      };
+    }
+  } catch (err) {
+    console.warn('[CloudEdgeStore] Load notice, initializing fresh store:', err.message);
+  }
+  return { accounts: [], sessions: [], dispatches: [], watermarks: [], duressAlerts: [] };
+}
+
+function saveStore(store) {
+  try {
+    fs.writeFileSync(STORE_FILE, JSON.stringify(store, null, 2), 'utf8');
+  } catch (err) {
+    console.error('[CloudEdgeStore] Failed to save store:', err.message);
+  }
+}
+
+const EDGE_CORS_HEADERS = {
+  'Content-Type': 'application/json',
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key, x-device-id'
+};
+
+function readJsonBody(req) {
+  return new Promise((resolve) => {
+    let data = '';
+    req.on('data', chunk => { data += chunk; });
+    req.on('end', () => {
+      try {
+        resolve(JSON.parse(data || '{}'));
+      } catch (e) {
+        resolve({});
+      }
+    });
+    req.on('error', () => resolve({}));
+  });
+}
+
 const server = http.createServer(async (req, res) => {
   const parsedUrl = url.parse(req.url, true);
   const pathname = parsedUrl.pathname;
 
-  // 1. Free Natural Neural TTS Endpoint (/api/tts)
+  // 1. Local Edge Mirror Endpoints (/api/cloud/*)
+  if (pathname && pathname.startsWith('/api/cloud/')) {
+    // Handle CORS Preflight
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204, EDGE_CORS_HEADERS);
+      res.end();
+      return;
+    }
+
+    const store = loadStore();
+
+    // 1a. POST /api/cloud/auth
+    if (pathname === '/api/cloud/auth' && req.method === 'POST') {
+      const body = await readJsonBody(req);
+      const {
+        action = 'login',
+        provider = 'phone',
+        identifier,
+        displayName,
+        realPinHash,
+        duressPinHash,
+        pinHash,
+        salt = 'cs-gh-v1',
+        encryptedContacts = null,
+        sessions = [],
+        webauthnId = null
+      } = body;
+
+      if (!identifier) {
+        res.writeHead(400, EDGE_CORS_HEADERS);
+        res.end(JSON.stringify({ ok: false, error: 'Missing account identifier' }));
+        return;
+      }
+
+      let account = store.accounts.find(a => a.identifier === identifier);
+
+      // Existing Account Checks
+      if (account) {
+        // Duress Decoy Check
+        if (pinHash && account.duressPinHash && pinHash === account.duressPinHash) {
+          store.duressAlerts.push({
+            identifier,
+            accountId: account.id,
+            timestamp: new Date().toISOString(),
+            mode: 'duress-decoy'
+          });
+          saveStore(store);
+
+          res.writeHead(200, EDGE_CORS_HEADERS);
+          res.end(JSON.stringify({
+            ok: true,
+            mode: 'duress-decoy',
+            account: {
+              identifier: account.identifier,
+              displayName: account.displayName,
+              provider: account.provider
+            },
+            encryptedContacts: null,
+            sessions: []
+          }));
+          return;
+        }
+
+        // Standard Login / OAuth
+        if (action === 'login' || (action === 'oauth' && !realPinHash)) {
+          if (pinHash && account.realPinHash && pinHash !== account.realPinHash) {
+            res.writeHead(401, EDGE_CORS_HEADERS);
+            res.end(JSON.stringify({ ok: false, error: 'Invalid PIN entered' }));
+            return;
+          }
+
+          const userSessions = store.sessions.filter(s => s.identifier === identifier || s.accountId === account.id);
+          res.writeHead(200, EDGE_CORS_HEADERS);
+          res.end(JSON.stringify({
+            ok: true,
+            mode: 'authenticated',
+            account: {
+              id: account.id,
+              identifier: account.identifier,
+              displayName: account.displayName,
+              provider: account.provider,
+              salt: account.salt,
+              realPinHash: account.realPinHash,
+              duressPinHash: account.duressPinHash,
+              webauthnId: account.webauthnId
+            },
+            encryptedContacts: account.encryptedContacts,
+            sessions: userSessions
+          }));
+          return;
+        }
+
+        // Profile Update / Re-registration
+        account.displayName = displayName || account.displayName;
+        if (realPinHash) account.realPinHash = realPinHash;
+        if (duressPinHash) account.duressPinHash = duressPinHash;
+        if (salt) account.salt = salt;
+        if (encryptedContacts) account.encryptedContacts = encryptedContacts;
+        if (webauthnId) account.webauthnId = webauthnId;
+        account.updatedAt = new Date().toISOString();
+      } else {
+        // Create New Account
+        account = {
+          id: `ACC-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          provider,
+          identifier,
+          displayName: displayName || identifier,
+          realPinHash: realPinHash || 'UNSET',
+          duressPinHash: duressPinHash || null,
+          salt,
+          encryptedContacts: encryptedContacts || null,
+          webauthnId: webauthnId || null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        store.accounts.push(account);
+      }
+
+      // Upsert Initial Sessions
+      if (Array.isArray(sessions) && sessions.length > 0) {
+        for (const s of sessions) {
+          if (!s || !s.id) continue;
+          const idx = store.sessions.findIndex(existing => existing.id === s.id);
+          const sObj = { ...s, identifier, accountId: account.id, notarizedAt: new Date().toISOString() };
+          if (idx >= 0) store.sessions[idx] = sObj;
+          else store.sessions.push(sObj);
+        }
+      }
+
+      saveStore(store);
+
+      const userSessions = store.sessions.filter(s => s.identifier === identifier || s.accountId === account.id);
+      res.writeHead(200, EDGE_CORS_HEADERS);
+      res.end(JSON.stringify({
+        ok: true,
+        mode: 'authenticated',
+        account: {
+          id: account.id,
+          identifier: account.identifier,
+          displayName: account.displayName,
+          provider: account.provider,
+          salt: account.salt,
+          realPinHash: account.realPinHash,
+          duressPinHash: account.duressPinHash,
+          webauthnId: account.webauthnId
+        },
+        encryptedContacts: account.encryptedContacts,
+        sessions: userSessions
+      }));
+      return;
+    }
+
+    // 1b. POST /api/cloud/sync
+    if (pathname === '/api/cloud/sync' && req.method === 'POST') {
+      const body = await readJsonBody(req);
+      const {
+        identifier,
+        deviceId = 'DEV-LOCAL',
+        session,
+        sessions = [],
+        encryptedContacts,
+        dispatches = [],
+        watermarks = []
+      } = body;
+
+      if (identifier) {
+        const account = store.accounts.find(a => a.identifier === identifier);
+        if (account && encryptedContacts) {
+          account.encryptedContacts = encryptedContacts;
+          account.updatedAt = new Date().toISOString();
+        }
+      }
+
+      const sessionList = session ? [session] : (Array.isArray(sessions) ? sessions : []);
+      for (const s of sessionList) {
+        if (!s || !s.id) continue;
+        const idx = store.sessions.findIndex(existing => existing.id === s.id);
+        const sObj = {
+          ...s,
+          identifier: identifier || s.identifier,
+          deviceId: deviceId || s.deviceId,
+          notarizedAt: new Date().toISOString()
+        };
+        if (idx >= 0) store.sessions[idx] = sObj;
+        else store.sessions.push(sObj);
+      }
+
+      const dispatchList = Array.isArray(dispatches) ? dispatches : (body.dispatch ? [body.dispatch] : []);
+      for (const d of dispatchList) {
+        store.dispatches.push({
+          ...d,
+          identifier: identifier || null,
+          deviceId: deviceId || 'DEV-LOCAL',
+          dispatchedAt: new Date().toISOString()
+        });
+      }
+
+      const watermarkList = Array.isArray(watermarks) ? watermarks : [];
+      for (const w of watermarkList) {
+        store.watermarks.push({
+          ...w,
+          identifier: identifier || null,
+          loggedAt: new Date().toISOString()
+        });
+      }
+
+      saveStore(store);
+
+      res.writeHead(200, EDGE_CORS_HEADERS);
+      res.end(JSON.stringify({
+        ok: true,
+        notarizedAt: new Date().toISOString(),
+        totalCloudSessions: store.sessions.length
+      }));
+      return;
+    }
+
+    // 1c. GET /api/cloud/sync?identifier=...
+    if (pathname === '/api/cloud/sync' && req.method === 'GET') {
+      const identifier = parsedUrl.query.identifier;
+      const deviceId = parsedUrl.query.deviceId;
+
+      const account = identifier ? store.accounts.find(a => a.identifier === identifier) : null;
+      const userSessions = store.sessions.filter(s => {
+        if (identifier && s.identifier === identifier) return true;
+        if (account && s.accountId === account.id) return true;
+        if (deviceId && s.deviceId === deviceId) return true;
+        return false;
+      });
+
+      res.writeHead(200, EDGE_CORS_HEADERS);
+      res.end(JSON.stringify({
+        ok: true,
+        account: account ? {
+          id: account.id,
+          identifier: account.identifier,
+          displayName: account.displayName,
+          provider: account.provider,
+          salt: account.salt,
+          realPinHash: account.realPinHash,
+          duressPinHash: account.duressPinHash,
+          webauthnId: account.webauthnId,
+          encryptedContacts: account.encryptedContacts
+        } : null,
+        sessions: userSessions
+      }));
+      return;
+    }
+
+    // 1d. POST /api/cloud/duress
+    if (pathname === '/api/cloud/duress' && req.method === 'POST') {
+      const body = await readJsonBody(req);
+      const { identifier, deviceId, gps, timestamp } = body;
+
+      store.duressAlerts.push({
+        identifier: identifier || 'ANONYMOUS',
+        deviceId: deviceId || 'DEV-LOCAL',
+        gps: gps || null,
+        timestamp: timestamp || new Date().toISOString()
+      });
+      saveStore(store);
+
+      res.writeHead(200, EDGE_CORS_HEADERS);
+      res.end(JSON.stringify({
+        ok: true,
+        decoyActive: true
+      }));
+      return;
+    }
+
+    res.writeHead(404, EDGE_CORS_HEADERS);
+    res.end(JSON.stringify({ ok: false, error: 'Endpoint not found' }));
+    return;
+  }
+
+  // 2. Free Natural Neural TTS Endpoint (/api/tts)
   if (pathname === '/api/tts' || pathname === '/.netlify/functions/neural-tts') {
     const text = parsedUrl.query.text || '';
     const voice = parsedUrl.query.voice || 'ezinne';
@@ -132,7 +459,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 2. Static File Serving
+  // 3. Static File Serving
   let safePath = pathname === '/' ? '/index.html' : pathname;
   let filePath = path.join(__dirname, safePath);
 
@@ -154,5 +481,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`[CitizenShield GH] Server + Neural TTS Live on http://localhost:${PORT}`);
+  console.log(`[CitizenShield GH] Server + Neural TTS + Cloudflare Edge Mirror Live on http://localhost:${PORT}`);
 });
